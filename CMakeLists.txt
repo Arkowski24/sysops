@@ -3,5 +3,5 @@ project(charBlockArray)
 
 set(CMAKE_C_STANDARD 99)
 
-set(SOURCE_FILES cw01/zad1/blockarray.c cw01/zad1/blockarray.h cw01/zad1/charblock.c cw01/zad1/charblock.h)
+set(SOURCE_FILES cw01/zad1/blockarray-dynamic.c cw01/zad1/blockarray-dynamic.h cw01/zad1/blockarray-static.c cw01/zad1/blockarray-static.h)
 add_library(charBlockArray ${SOURCE_FILES})
