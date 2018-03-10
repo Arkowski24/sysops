@@ -7,8 +7,6 @@
 
 #define MAX_ARRAY_LENGTH 1000
 
-extern static char *blockArray[MAX_ARRAY_LENGTH];
-
 void clear_array();
 
 int count_free_places(const char block[], int blockLength);
