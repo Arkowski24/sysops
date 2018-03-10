@@ -2,13 +2,13 @@
 
 static char *blockArray[MAX_ARRAY_LENGTH];
 
-void clear_array() {
+void blockarray_static_clear_array() {
     for (int i = 0; i < MAX_ARRAY_LENGTH; ++i) {
         blockArray[i] = 0;
     }
 }
 
-int count_free_places(const char block[], int blockLength) {
+int blockarray_static_count_free_places(const char block[], int blockLength) {
     int freePlaces = 0;
     for (int i = 0; i < blockLength; ++i) {
         if (block[i] == 0) {
@@ -19,9 +19,9 @@ int count_free_places(const char block[], int blockLength) {
 }
 
 //Return: -1 if failed, otherwise inserted element's position.
-int insert_block(const char block[], int blockLength) {
+int blockarray_static_insert_block(const char block[], int blockLength) {
     for (int i = 0; i < MAX_ARRAY_LENGTH; ++i) {
-        if (count_free_places(blockArray[i], blockLength) == blockLength) {
+        if (blockarray_static_count_free_places(blockArray[i], blockLength) == blockLength) {
             for (int j = 0; j < blockLength; ++j) {
                 blockArray[i][j] = block[j];
             }
@@ -31,7 +31,7 @@ int insert_block(const char block[], int blockLength) {
     return (-1);
 }
 
-void remove_block(unsigned int index, int blockLength) {
+void blockarray_static_remove_block(unsigned int index, int blockLength) {
     if (index >= MAX_ARRAY_LENGTH) return;
 
     for (int j = 0; j < blockLength; ++j) {
@@ -39,7 +39,7 @@ void remove_block(unsigned int index, int blockLength) {
     }
 }
 
-int sum_in_block(const char block[], unsigned int blockLength) {
+int blockarray_static_sum_in_block(const char block[], unsigned int blockLength) {
     if (block == NULL) return 0;
 
     int sumInBlock = 0;
@@ -49,15 +49,15 @@ int sum_in_block(const char block[], unsigned int blockLength) {
     return sumInBlock;
 }
 
-char *find_nearest_sum_block(char block[], unsigned int blockLength) {
+char *blockarray_static_find_nearest_sum_block(char block[], unsigned int blockLength) {
     if (block == NULL) return NULL;
 
-    int searchedSum = sum_in_block(block, blockLength);
+    int searchedSum = blockarray_static_sum_in_block(block, blockLength);
     int minimalDifference = INT_MAX;
     char *chosenBlock = NULL;
 
     for (int i = 0; i < MAX_ARRAY_LENGTH; ++i) {
-        int sumInCheckedBlock = sum_in_block(blockArray[i], blockLength);
+        int sumInCheckedBlock = blockarray_static_sum_in_block(blockArray[i], blockLength);
         int difference = abs(searchedSum - sumInCheckedBlock);
         if (difference < minimalDifference) {
             minimalDifference = difference;

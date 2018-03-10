@@ -1,6 +1,6 @@
 #include "blockarray-dynamic-alloc.h"
 
-struct CharBlockArray *create_array(unsigned int arrayLength, unsigned int blockLength) {
+struct CharBlockArray *blockarray_dynamic_create_array(unsigned int arrayLength, unsigned int blockLength) {
     struct CharBlockArray *arrPtr;
     arrPtr = (struct CharBlockArray *) calloc(sizeof(struct CharBlockArray), 1);
     arrPtr->arrayLength = arrayLength;
@@ -10,7 +10,7 @@ struct CharBlockArray *create_array(unsigned int arrayLength, unsigned int block
 }
 
 //deleteOption = 1 -> delete array with stored blocks, otherwise -> preserve blocks.
-void delete_array(struct CharBlockArray *blkArray, int deleteMode) {
+void blockarray_dynamic_delete_array(struct CharBlockArray *blkArray, int deleteMode) {
     if (blkArray == NULL) return;
     if (blkArray->array != NULL) {
         if (deleteMode == 1) {
@@ -24,7 +24,7 @@ void delete_array(struct CharBlockArray *blkArray, int deleteMode) {
 }
 
 //Return: -1 if failed, otherwise inserted element's position.
-int insert_block(struct CharBlockArray *blkArray, char *block) {
+int blockarray_dynamic_insert_block(struct CharBlockArray *blkArray, char *block) {
     if (blkArray == NULL || blkArray->array == NULL) return (-1);
     for (int i = 0; i < blkArray->arrayLength; ++i) {
         if (blkArray->array[i] == NULL) {
@@ -36,7 +36,7 @@ int insert_block(struct CharBlockArray *blkArray, char *block) {
 }
 
 //deleteOption = 1 -> remove block and delete it, otherwise just remove it from array.
-void remove_block(struct CharBlockArray *blkArray, unsigned int index, int deleteMode) {
+void blockarray_dynamic_remove_block(struct CharBlockArray *blkArray, unsigned int index, int deleteMode) {
     if (blkArray == NULL || blkArray->array == NULL || index >= blkArray->arrayLength) return;
 
     if (deleteMode == 1) {
@@ -45,7 +45,7 @@ void remove_block(struct CharBlockArray *blkArray, unsigned int index, int delet
     blkArray->array[index] = NULL;
 }
 
-int sum_in_block(const char *block, unsigned int blockLength) {
+int blockarray_dynamic_sum_in_block(const char *block, unsigned int blockLength) {
     if (block == NULL) return 0;
 
     int sumInBlock = 0;
@@ -55,16 +55,16 @@ int sum_in_block(const char *block, unsigned int blockLength) {
     return sumInBlock;
 }
 
-char *find_nearest_sum_block(struct CharBlockArray *blkArray, char *block, unsigned int blockLength) {
+char *blockarray_dynamic_find_nearest_sum_block(struct CharBlockArray *blkArray, char *block, unsigned int blockLength) {
     if (block == NULL || blkArray == NULL || blkArray->array == NULL) return NULL;
 
-    int searchedSum = sum_in_block(block, blockLength);
+    int searchedSum = blockarray_dynamic_sum_in_block(block, blockLength);
     int minimalDifference = INT_MAX;
     char *chosenBlock = NULL;
 
     for (int i = 0; i < blkArray->arrayLength; ++i) {
         if (blkArray->array[i] != NULL) {
-            int sumInCheckedBlock = sum_in_block(blkArray->array[i], blkArray->blockLength);
+            int sumInCheckedBlock = blockarray_dynamic_sum_in_block(blkArray->array[i], blkArray->blockLength);
             int difference = abs(searchedSum - sumInCheckedBlock);
             if (difference < minimalDifference) {
                 minimalDifference = difference;
