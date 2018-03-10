@@ -1,4 +1,4 @@
-#include "blockarray.h"
+#include "blockarray-static-alloc.h"
 
 static char *blockArray[MAX_ARRAY_LENGTH];
 

@@ -1,4 +1,4 @@
-#include "blockarray.h"
+#include "blockarray-dynamic-alloc.h"
 
 struct CharBlockArray *create_array(unsigned int arrayLength, unsigned int blockLength) {
     struct CharBlockArray *arrPtr;
