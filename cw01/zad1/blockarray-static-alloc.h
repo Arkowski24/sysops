@@ -8,6 +8,10 @@
 #define MAX_ARRAY_LENGTH 1000
 #define MAX_BLOCK_LENGTH 1000
 
+unsigned int get_max_array_length();
+
+unsigned int get_max_block_length();
+
 int blockarray_static_create_array(unsigned int arrayLength, unsigned int blockLength);
 
 void blockarray_static_delete_array();
