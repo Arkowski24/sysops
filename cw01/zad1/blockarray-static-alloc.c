@@ -1,40 +1,60 @@
 #include "blockarray-static-alloc.h"
 
-static char *blockArray[MAX_ARRAY_LENGTH];
+static char blockArray[MAX_ARRAY_LENGTH][MAX_BLOCK_LENGTH] = {0};
+static unsigned int currentArrayLength = 0;
+static unsigned int currentBlockLength = 0;
 
-void blockarray_static_clear_array() {
-    for (int i = 0; i < MAX_ARRAY_LENGTH; ++i) {
-        blockArray[i] = 0;
+//1 if failed (illegal length of block or array), otherwise 0
+int blockarray_static_create_array(unsigned int arrayLength, unsigned int blockLength) {
+    if(arrayLength >= MAX_ARRAY_LENGTH || blockLength >= MAX_BLOCK_LENGTH){
+        return 1;
+    }
+    currentArrayLength = arrayLength;
+    currentBlockLength = blockLength;
+}
+
+void blockarray_static_delete_array() {
+    for (int i = 0; i < currentArrayLength; ++i) {
+        for (int j = 0; j < currentBlockLength; ++j) {
+            blockArray[i][j] = 0;
+        }
     }
 }
 
-int blockarray_static_count_free_places(const char block[], int blockLength) {
-    int freePlaces = 0;
-    for (int i = 0; i < blockLength; ++i) {
-        if (block[i] == 0) {
-            freePlaces += 1;
+//1 if block is not free (all elements are not 0), otherwise 0
+int blockarray_static_is_free(const char block[]) {
+    for (int i = 0; i < currentBlockLength; ++i) {
+        if (block[i] != 0) {
+            return 1;
         }
     }
-    return freePlaces;
+    return 0;
 }
 
 //Return: -1 if failed, otherwise inserted element's position.
-int blockarray_static_insert_block(const char block[], int blockLength) {
-    for (int i = 0; i < MAX_ARRAY_LENGTH; ++i) {
-        if (blockarray_static_count_free_places(blockArray[i], blockLength) == blockLength) {
-            for (int j = 0; j < blockLength; ++j) {
-                blockArray[i][j] = block[j];
-            }
-            return i;
+int blockarray_static_insert_block(const char block[], unsigned int blockLength) {
+    int chosenBlock = -1;
+    for (int i = 0; i < currentArrayLength; ++i) {
+        if (blockarray_static_is_free(blockArray[i]) == 0) {
+            chosenBlock = i;
+            break;
         }
     }
-    return (-1);
+    if(chosenBlock != -1){
+        if (blockLength >= currentArrayLength) {
+            blockLength = currentArrayLength - 1;
+        }
+        for (int i = 0; i < blockLength; ++i) {
+            blockArray[chosenBlock][i] = block[i];
+        }
+    }
+    return chosenBlock;
 }
 
-void blockarray_static_remove_block(unsigned int index, int blockLength) {
-    if (index >= MAX_ARRAY_LENGTH) return;
+void blockarray_static_remove_block(unsigned int index) {
+    if (index >= currentArrayLength) return;
 
-    for (int j = 0; j < blockLength; ++j) {
+    for (int j = 0; j < currentBlockLength; ++j) {
         blockArray[index][j] = 0;
     }
 }
@@ -56,8 +76,8 @@ char *blockarray_static_find_nearest_sum_block(char block[], unsigned int blockL
     int minimalDifference = INT_MAX;
     char *chosenBlock = NULL;
 
-    for (int i = 0; i < MAX_ARRAY_LENGTH; ++i) {
-        int sumInCheckedBlock = blockarray_static_sum_in_block(blockArray[i], blockLength);
+    for (int i = 0; i < currentArrayLength; ++i) {
+        int sumInCheckedBlock = blockarray_static_sum_in_block(blockArray[i], currentBlockLength);
         int difference = abs(searchedSum - sumInCheckedBlock);
         if (difference < minimalDifference) {
             minimalDifference = difference;
