@@ -15,6 +15,10 @@ int main(int argc, char *argv[]) {
     } else {
         execute_dynamic();
     }
+
+    for (int i = 0; i < oprC; ++i) {
+        free(operations[i]);
+    }
 }
 
 void execute_static() {

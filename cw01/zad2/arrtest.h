@@ -1,6 +1,7 @@
 #ifndef CHARBLOCKARRAY_ARRTEST_H
 #define CHARBLOCKARRAY_ARRTEST_H
 
+#include <sys/times.h>
 #include "../zad1/blockarray-dynamic-alloc.h"
 #include "../zad1/blockarray-static-alloc.h"
 
@@ -21,9 +22,13 @@ int get_allocation_method(char **argv);
 
 int parse_options(int argc, char **argv);
 
+void print_times(clock_t startTime, clock_t endTime, struct tms startCPU, struct tms endCPU);
+
 char *create_random_block(unsigned int blocksCount);
 
 void static_init(unsigned int arrayLength, unsigned int blockLength);
+
+void static_clear();
 
 void static_find_nearest(unsigned int index);
 
@@ -33,7 +38,7 @@ void static_alternatively_remove_and_insert(unsigned int blocksCount, unsigned i
 
 void dynamic_init(struct CharBlockArray *blockArray, unsigned int arrayLength, unsigned int blockLength);
 
-void dynamic_clr(struct CharBlockArray *blockArray);
+void dynamic_clear(struct CharBlockArray *blockArray);
 
 void dynamic_find_nearest(struct CharBlockArray *blockArray, unsigned int index);
 

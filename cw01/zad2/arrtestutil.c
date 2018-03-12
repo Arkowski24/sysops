@@ -1,5 +1,6 @@
 #include <ctype.h>
 #include <string.h>
+#include <sys/times.h>
 #include "arrtest.h"
 
 extern int oprC;
@@ -87,10 +88,13 @@ int parse_options(int argc, char **argv) {
                 printf("%s", argv[i]);
                 return 1;
             }
+
             operations[oprC] = malloc(sizeof(struct Operation));
             operations[oprC]->operationType = optType;
             operations[oprC]->argument = arg;
+
             oprC++;
+            i++;
         }
     }
     return 0;
@@ -102,4 +106,10 @@ char *create_random_block(unsigned int blockLength) {
         inArr[i] = (char) rand();
     }
     return inArr;
+}
+
+void print_times(clock_t startTime, clock_t endTime, struct tms startCPU, struct tms endCPU) {
+    printf("Real time: %lld ticks.\n", (long long) (endTime - startTime));
+    printf("System time: %lld ticks.\n", (long long) (endCPU.tms_stime - startCPU.tms_stime));
+    printf("User time: %lld ticks.\n\n", (long long) (endCPU.tms_utime - startCPU.tms_utime));
 }
