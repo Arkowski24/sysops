@@ -10,6 +10,8 @@
 
 int blockarray_static_create_array(unsigned int arrayLength, unsigned int blockLength);
 
+void blockarray_static_clear_array();
+
 void blockarray_static_delete_array();
 
 int blockarray_static_is_free(const char block[]);

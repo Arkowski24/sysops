@@ -6,7 +6,7 @@ unsigned int currentBlockLength = 0;
 
 //1 if failed (illegal length of block or array), otherwise 0
 int blockarray_static_create_array(unsigned int arrayLength, unsigned int blockLength) {
-    if (arrayLength >= MAX_ARRAY_LENGTH || blockLength >= MAX_BLOCK_LENGTH) {
+    if (arrayLength > MAX_ARRAY_LENGTH || blockLength > MAX_BLOCK_LENGTH) {
         return 1;
     }
     currentArrayLength = arrayLength;
@@ -14,12 +14,18 @@ int blockarray_static_create_array(unsigned int arrayLength, unsigned int blockL
     return 0;
 }
 
-void blockarray_static_delete_array() {
+void blockarray_static_clear_array() {
     for (int i = 0; i < currentArrayLength; ++i) {
         for (int j = 0; j < currentBlockLength; ++j) {
             blockArray[i][j] = 0;
         }
     }
+}
+
+void blockarray_static_delete_array() {
+    blockarray_static_clear_array();
+    currentArrayLength = 0;
+    currentBlockLength = 0;
 }
 
 //1 if block is not free (all elements are not 0), otherwise 0
