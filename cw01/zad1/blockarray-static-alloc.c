@@ -11,6 +11,7 @@ int blockarray_static_create_array(unsigned int arrayLength, unsigned int blockL
     }
     currentArrayLength = arrayLength;
     currentBlockLength = blockLength;
+    return 0;
 }
 
 void blockarray_static_delete_array() {
