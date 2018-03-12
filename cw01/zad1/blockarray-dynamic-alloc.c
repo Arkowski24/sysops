@@ -14,13 +14,20 @@ void blockarray_dynamic_delete_array(struct CharBlockArray *blkArray, int delete
     if (blkArray == NULL) return;
     if (blkArray->array != NULL) {
         if (deleteMode == 1) {
-            for (int i = 0; i < blkArray->arrayLength; ++i) {
-                free(blkArray->array[i]);
-            }
+            blockarray_dynamic_clear_array(blkArray);
         }
         free(blkArray->array);
     }
     free(blkArray);
+}
+
+void blockarray_dynamic_clear_array(struct CharBlockArray *blkArray) {
+    if (blkArray == NULL) return;
+    if (blkArray->array != NULL) {
+        for (int i = 0; i < blkArray->arrayLength; ++i) {
+            free(blkArray->array[i]);
+        }
+    }
 }
 
 //Return: -1 if failed, otherwise inserted element's position.
@@ -55,15 +62,15 @@ int blockarray_dynamic_sum_in_block(const char *block, unsigned int blockLength)
     return sumInBlock;
 }
 
-char *blockarray_dynamic_find_nearest_sum_block(struct CharBlockArray *blkArray, char *block, unsigned int blockLength) {
-    if (block == NULL || blkArray == NULL || blkArray->array == NULL) return NULL;
+char *blockarray_dynamic_find_nearest_sum_block(struct CharBlockArray *blkArray, unsigned int index) {
+    if (blkArray == NULL || blkArray->array == NULL || index >= blkArray->arrayLength || blkArray->array[index] == NULL) return NULL;
 
-    int searchedSum = blockarray_dynamic_sum_in_block(block, blockLength);
+    int searchedSum = blockarray_dynamic_sum_in_block(blkArray->array[index], blkArray->blockLength);
     int minimalDifference = INT_MAX;
     char *chosenBlock = NULL;
 
     for (int i = 0; i < blkArray->arrayLength; ++i) {
-        if (blkArray->array[i] != NULL) {
+        if (blkArray->array[i] != NULL && i != index) {
             int sumInCheckedBlock = blockarray_dynamic_sum_in_block(blkArray->array[i], blkArray->blockLength);
             int difference = abs(searchedSum - sumInCheckedBlock);
             if (difference < minimalDifference) {

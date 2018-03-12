@@ -1,12 +1,12 @@
 #include "blockarray-static-alloc.h"
 
-static char blockArray[MAX_ARRAY_LENGTH][MAX_BLOCK_LENGTH] = {0};
-static unsigned int currentArrayLength = 0;
-static unsigned int currentBlockLength = 0;
+char blockArray[MAX_ARRAY_LENGTH][MAX_BLOCK_LENGTH] = {0};
+unsigned int currentArrayLength = 0;
+unsigned int currentBlockLength = 0;
 
 //1 if failed (illegal length of block or array), otherwise 0
 int blockarray_static_create_array(unsigned int arrayLength, unsigned int blockLength) {
-    if(arrayLength >= MAX_ARRAY_LENGTH || blockLength >= MAX_BLOCK_LENGTH){
+    if (arrayLength >= MAX_ARRAY_LENGTH || blockLength >= MAX_BLOCK_LENGTH) {
         return 1;
     }
     currentArrayLength = arrayLength;
@@ -40,7 +40,7 @@ int blockarray_static_insert_block(const char block[], unsigned int blockLength)
             break;
         }
     }
-    if(chosenBlock != -1){
+    if (chosenBlock != -1) {
         if (blockLength >= currentArrayLength) {
             blockLength = currentArrayLength - 1;
         }
@@ -69,19 +69,21 @@ int blockarray_static_sum_in_block(const char block[], unsigned int blockLength)
     return sumInBlock;
 }
 
-char *blockarray_static_find_nearest_sum_block(char block[], unsigned int blockLength) {
-    if (block == NULL) return NULL;
+char *blockarray_static_find_nearest_sum_block(unsigned int index) {
+    if (index >= currentArrayLength) return NULL;
 
-    int searchedSum = blockarray_static_sum_in_block(block, blockLength);
+    int searchedSum = blockarray_static_sum_in_block(blockArray[index], currentBlockLength);
     int minimalDifference = INT_MAX;
     char *chosenBlock = NULL;
 
     for (int i = 0; i < currentArrayLength; ++i) {
-        int sumInCheckedBlock = blockarray_static_sum_in_block(blockArray[i], currentBlockLength);
-        int difference = abs(searchedSum - sumInCheckedBlock);
-        if (difference < minimalDifference) {
-            minimalDifference = difference;
-            chosenBlock = blockArray[i];
+        if (i != index) {
+            int sumInCheckedBlock = blockarray_static_sum_in_block(blockArray[i], currentBlockLength);
+            int difference = abs(searchedSum - sumInCheckedBlock);
+            if (difference < minimalDifference) {
+                minimalDifference = difference;
+                chosenBlock = blockArray[i];
+            }
         }
     }
     return chosenBlock;
