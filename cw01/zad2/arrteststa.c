@@ -1,14 +1,14 @@
 #include <sys/times.h>
 #include "arrtest.h"
 
-static int initialized = 0;
 static clock_t startTime;
 static clock_t endTime;
 static struct tms startCPU;
 static struct tms endCPU;
+static unsigned int availableBlocks = 0;
 
 void static_init(unsigned int arrayLength, unsigned int blockLength) {
-    if (initialized == 1) {
+    if (availableBlocks > 0) {
         static_clear();
     }
 
@@ -24,7 +24,7 @@ void static_init(unsigned int arrayLength, unsigned int blockLength) {
     printf("Blocks count: %u, block's length: %u \n", arrayLength, blockLength);
     print_times(startTime, endTime, startCPU, endCPU);
 
-    initialized = 1;
+    availableBlocks += arrayLength;
 }
 
 void static_clear() {
@@ -34,6 +34,7 @@ void static_clear() {
 
     printf("Array clear times: \n");
     print_times(startTime, endTime, startCPU, endCPU);
+    availableBlocks = 0;
 }
 
 void static_find_nearest(unsigned int index) {
@@ -75,4 +76,36 @@ void static_alternatively_remove_and_insert(unsigned int blocksCount, unsigned i
     printf("Remove and insert alternatively in static array: \n");
     printf("Number of removed/inserted blocks: %u \n", blocksCount);
     print_times(startTime, endTime, startCPU, endCPU);
+}
+
+void static_insert(unsigned int blocksCount, unsigned int blockLength) {
+    startTime = times(&startCPU);
+    for (int j = 0; j < blocksCount; ++j) {
+        char *inArr = create_random_block(blockLength);
+        blockarray_static_insert_block(inArr, blockLength);
+        free(inArr);
+    }
+    endTime = times(&endCPU);
+
+    printf("Insert in static array: \n");
+    printf("Number of inserted blocks: %u \n", blocksCount);
+    print_times(startTime, endTime, startCPU, endCPU);
+
+    availableBlocks += blocksCount;
+}
+
+void static_remove(unsigned int blocksCount) {
+    if (blocksCount < availableBlocks) { blocksCount = availableBlocks; }
+
+    startTime = times(&startCPU);
+    for (unsigned int i = 0; i < blocksCount; ++i) {
+        blockarray_static_remove_block(i);
+    }
+    endTime = times(&endCPU);
+
+    printf("Remove in static array: \n");
+    printf("Number of removed blocks: %u \n", blocksCount);
+    print_times(startTime, endTime, startCPU, endCPU);
+
+    availableBlocks -= availableBlocks;
 }

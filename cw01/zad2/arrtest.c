@@ -37,6 +37,12 @@ void execute_static() {
             case 3:
                 static_alternatively_remove_and_insert(operations[i]->argument, blockLength);
                 break;
+            case 4:
+                static_remove(operations[i]->argument);
+                break;
+            case 5:
+                static_insert(operations[i]->argument, blockLength);
+                break;
             default:
                 break;
         }
@@ -58,6 +64,12 @@ void execute_dynamic() {
                 break;
             case 3:
                 dynamic_alternatively_remove_and_insert(blockArray, operations[i]->argument);
+                break;
+            case 4:
+                dynamic_remove(blockArray, operations[i]->argument);
+                break;
+            case 5:
+                dynamic_insert(blockArray, operations[i]->argument);
                 break;
             default:
                 break;

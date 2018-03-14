@@ -15,7 +15,7 @@ void to_low_letters(char *str) {
 
 int parse_command_line(int argc, char **argv) {
     if (argc < 5) {
-        printf("Not enough arguments.");
+        printf("Not enough arguments. \n");
         return 1;
     }
     if (get_allocation_method(argv) == 1) {
@@ -25,7 +25,7 @@ int parse_command_line(int argc, char **argv) {
     arrayLength = (unsigned int) atoi(argv[2]);
     blockLength = (unsigned int) atoi(argv[3]);
     if (arrayLength == 0 || blockLength == 0 || arrayLength > MAX_ARRAY_LENGTH || blockLength > MAX_BLOCK_LENGTH) {
-        printf("Incorrect array or block length.");
+        printf("Incorrect array or block length. \n");
         return 1;
     }
 
@@ -43,8 +43,7 @@ int get_allocation_method(char **argv) {
     } else if (strcmp(argv[1], "dynamic") == 0 || strcmp(argv[1], "d") == 0) {
         allocationType = 1;
     } else {
-        printf("Unknown allocation type: ");
-        printf("%s", argv[1]);
+        printf("Unknown allocation type: %s \n", argv[1]);
         return 1;
     }
     return 0;
@@ -61,14 +60,14 @@ int parse_options(int argc, char **argv) {
             oprC++;
         } else {
             if (i + 1 >= argc) {
-                printf("Not enough arguments.");
+                printf("Not enough arguments. \n");
                 return 1;
             }
 
             unsigned int arg = (unsigned int) atoi(argv[i + 1]);
             short int optType = -1;
             if (arg > arrayLength) {
-                printf("Invalid size/index.");
+                printf("Invalid size/index. \n");
                 return 1;
             }
 
@@ -81,11 +80,14 @@ int parse_options(int argc, char **argv) {
                 optType = 2;
             } else if ((strcmp(argv[i], "armin") == 0)) {
                 optType = 3;
+            } else if (strcmp(argv[i], "rm") == 0) {
+                optType = 4;
+            } else if (strcmp(argv[i], "in") == 0) {
+                optType = 5;
             }
 
             if (optType == -1) {
-                printf("Unknown argument: ");
-                printf("%s", argv[i]);
+                printf("Unknown argument: %s \n", argv[i]);
                 return 1;
             }
 

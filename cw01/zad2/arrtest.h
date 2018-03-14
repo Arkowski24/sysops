@@ -36,6 +36,10 @@ void static_remove_and_insert(unsigned int blocksCount, unsigned int blockLength
 
 void static_alternatively_remove_and_insert(unsigned int blocksCount, unsigned int blockLength);
 
+void static_insert(unsigned int blocksCount, unsigned int blockLength);
+
+void static_remove(unsigned int blocksCount);
+
 void dynamic_init(struct CharBlockArray *blockArray, unsigned int arrayLength, unsigned int blockLength);
 
 void dynamic_clear(struct CharBlockArray *blockArray);
@@ -45,5 +49,9 @@ void dynamic_find_nearest(struct CharBlockArray *blockArray, unsigned int index)
 void dynamic_remove_and_insert(struct CharBlockArray *blockArray, unsigned int blocksCount);
 
 void dynamic_alternatively_remove_and_insert(struct CharBlockArray *blockArray, unsigned int blocksCount);
+
+void dynamic_insert(struct CharBlockArray *blockArray, unsigned int blocksCount);
+
+void dynamic_remove(struct CharBlockArray *blockArray, unsigned int blocksCount);
 
 #endif //CHARBLOCKARRAY_ARRTEST_H
