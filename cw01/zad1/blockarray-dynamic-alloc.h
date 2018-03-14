@@ -19,7 +19,7 @@ void blockarray_dynamic_clear_array(struct CharBlockArray *blkArray);
 
 int blockarray_dynamic_insert_block(struct CharBlockArray *blkArray, char *block);
 
-void blockarray_dynamic_remove_block(struct CharBlockArray *blkArray, unsigned int index, int deleteMode);
+int blockarray_dynamic_remove_block(struct CharBlockArray *blkArray, unsigned int index, int deleteMode);
 
 int blockarray_dynamic_sum_in_block(const char *block, unsigned int blockLength);
 

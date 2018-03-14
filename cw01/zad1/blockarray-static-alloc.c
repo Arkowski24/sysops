@@ -1,6 +1,6 @@
 #include "blockarray-static-alloc.h"
 
-char blockArray[MAX_ARRAY_LENGTH][MAX_BLOCK_LENGTH] = {0};
+char blockArray[MAX_ARRAY_LENGTH][MAX_BLOCK_LENGTH];
 unsigned int currentArrayLength = 0;
 unsigned int currentBlockLength = 0;
 
