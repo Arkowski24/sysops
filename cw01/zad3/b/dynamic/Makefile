@@ -20,7 +20,7 @@ arrtest1: arrtest1.o arrtestdyn1.o arrteststa1.o arrtestutil1.o libblockarray1.s
 	$(CC) arrtest1.o arrtestdyn1.o arrteststa1.o arrtestutil1.o -Wl,-rpath=$(PWD) -o arrtest1 -ldl
 
 arrtest1.o: src/arrtest1.c
-	$(CC) $(CFLAGS) $(OPT1) src/arrtest1.c
+	$(CC) $(CFLAGS) $(OPT1) src/arrtest1.c -o arrtest1.o:
 
 arrtestdyn1.o: $(DYNA)/src/arrtestdyn.c
 	$(CC) $(CFLAGS) $(OPT1) $(DYNA)/src/arrtestdyn.c -o arrtestdyn1.o
@@ -47,7 +47,7 @@ arrtest2: arrtest2.o arrtestdyn2.o arrteststa2.o arrtestutil2.o libblockarray2.s
 	$(CC) arrtest2.o arrtestdyn2.o arrteststa2.o arrtestutil2.o -Wl,-rpath=$(PWD) -o arrtest2 -ldl
 
 arrtest2.o: src/arrtest2.c
-	$(CC) $(CFLAGS) $(OPT2) src/arrtest2.c
+	$(CC) $(CFLAGS) $(OPT2) src/arrtest2.c -o arrtest2.o
 
 arrtestdyn2.o: $(DYNA)/src/arrtestdyn.c
 	$(CC) $(CFLAGS) $(OPT2) $(DYNA)/src/arrtestdyn.c -o arrtestdyn2.o
@@ -74,7 +74,7 @@ arrtest3: arrtest3.o arrtestdyn3.o arrteststa3.o arrtestutil3.o libblockarray3.s
 	$(CC) arrtest3.o arrtestdyn3.o arrteststa3.o arrtestutil3.o -Wl,-rpath=$(PWD) -o arrtest3 -ldl
 
 arrtest3.o: src/arrtest3.c
-	$(CC) $(CFLAGS) $(OPT3) src/arrtest3.c
+	$(CC) $(CFLAGS) $(OPT3) src/arrtest3.c -o arrtest3.o
 
 arrtestdyn3.o: $(DYNA)/src/arrtestdyn.c
 	$(CC) $(CFLAGS) $(OPT3) $(DYNA)/src/arrtestdyn.c -o arrtestdyn3.o
