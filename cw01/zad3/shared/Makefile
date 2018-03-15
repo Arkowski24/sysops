@@ -3,8 +3,8 @@ CFLAGS=-c -Wall -std=c99 -fPIC
 SHRLIB=-Wall -std=c99 -fPIC -shared
 
 all: arrtest
-	./arrtest s 10000 10000 init rmin 5000 armin 5000 fnd 200 > static_raport.txt
-	./arrtest d 10000 10000 init rmin 5000 armin 5000 fnd 200 > dynamic_raport.txt
+	./arrtest s 10000 10000 init rmin 5000 armin 5000 fnd 200 > static_report.txt
+	./arrtest d 10000 10000 init rmin 5000 armin 5000 fnd 200 > dynamic_report.txt
 
 arrtest: arrtest.o arrtestdyn.o arrteststa.o arrtestutil.o libblockarray.so.1.0.1
 	$(CC) arrtest.o arrtestdyn.o arrteststa.o arrtestutil.o -L$(PWD) -l blockarray -Wl,-rpath=$(PWD) -o arrtest
@@ -34,4 +34,4 @@ blockarray-dynamic-alloc.o: ../../zad1/blockarray-dynamic-alloc.c
 
 .PHONY : clean
 clean:
-	rm *.o libblockarray.* arrtest 
+	rm *.o libblockarray.* arrtest
