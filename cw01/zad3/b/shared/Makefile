@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-c -Wall -std=c99
+CFLAGS=-c -Wall -std=c99 -fPIC
 SHRLIB=-Wall -std=c99 -fPIC -shared
 TASK1=../../../zad1
 TASK2=../../../zad2
@@ -16,8 +16,8 @@ all: arrtest1 arrtest2 arrtest3
 	./arrtest2 d 10000 10000 init fnd 1000 rmIn 10000 armIn 10000 >> dynamic_report.txt
 	./arrtest3 d 10000 10000 init fnd 1000 rmIn 10000 armIn 10000 >> dynamic_report.txt
 
-arrtest1: arrtest1.o arrtestdyn1.o arrteststa1.o arrtestutil1.o blockarray1.a
-	$(CC) arrtest1.o arrtestdyn1.o arrteststa1.o arrtestutil1.o blockarray1.a -o arrtest1
+arrtest1: arrtest1.o arrtestdyn1.o arrteststa1.o arrtestutil1.o libblockarray1.so.1.0.1
+	$(CC) arrtest1.o arrtestdyn1.o arrteststa1.o arrtestutil1.o -L$(PWD) -l blockarray1 -Wl,-rpath=$(PWD) -o arrtest1
 
 arrtest1.o: $(TASK2)/arrtest.c
 	$(CC) $(CFLAGS) $(OPT1) $(TASK2)/arrtest.c -o arrtest1.o
@@ -31,18 +31,20 @@ arrteststa1.o: $(TASK2)/arrteststa.c
 arrtestutil1.o: $(TASK2)/arrtestutil.c
 	$(CC) $(CFLAGS) $(OPT1) $(TASK2)/arrtestutil.c -o arrtestutil1.o
 
-blockarray1.a: blockarray-static-alloc1.o blockarray-dynamic-alloc1.o
-	ar rcs blockarray1.a blockarray-static-alloc1.o blockarray-dynamic-alloc1.o
+libblockarray1.so.1.0.1: blockarray-static-alloc1.o blockarray-dynamic-alloc1.o
+	$(CC) $(SHRLIB) -Wl,-soname,libblockarray1.so.1 -o libblockarray1.so.1.0.1 blockarray-static-alloc1.o blockarray-dynamic-alloc1.o -lc
+	ln -s libblockarray1.so.1.0.1 libblockarray1.so.1
+	ln -s libblockarray1.so.1 libblockarray1.so
 
 blockarray-static-alloc1.o: $(TASK1)/blockarray-static-alloc.c
 	$(CC) $(CFLAGS) $(OPT1) $(TASK1)/blockarray-static-alloc.c -o blockarray-static-alloc1.o
 
 blockarray-dynamic-alloc1.o: $(TASK1)/blockarray-dynamic-alloc.c
 	$(CC) $(CFLAGS) $(OPT1) $(TASK1)/blockarray-dynamic-alloc.c -o blockarray-dynamic-alloc1.o
+#---------------------------
 
-#-------------
-arrtest2: arrtest2.o arrtestdyn2.o arrteststa2.o arrtestutil2.o blockarray2.a
-	$(CC) arrtest2.o arrtestdyn2.o arrteststa2.o arrtestutil2.o blockarray2.a -o arrtest2
+arrtest2: arrtest2.o arrtestdyn2.o arrteststa2.o arrtestutil2.o libblockarray2.so.1.0.1
+	$(CC) arrtest2.o arrtestdyn2.o arrteststa2.o arrtestutil2.o -L$(PWD) -l blockarray2 -Wl,-rpath=$(PWD) -o arrtest2
 
 arrtest2.o: $(TASK2)/arrtest.c
 	$(CC) $(CFLAGS) $(OPT2) $(TASK2)/arrtest.c -o arrtest2.o
@@ -56,18 +58,20 @@ arrteststa2.o: $(TASK2)/arrteststa.c
 arrtestutil2.o: $(TASK2)/arrtestutil.c
 	$(CC) $(CFLAGS) $(OPT2) $(TASK2)/arrtestutil.c -o arrtestutil2.o
 
-blockarray2.a: blockarray-static-alloc2.o blockarray-dynamic-alloc2.o
-	ar rcs blockarray2.a blockarray-static-alloc2.o blockarray-dynamic-alloc2.o
+libblockarray2.so.1.0.1: blockarray-static-alloc2.o blockarray-dynamic-alloc2.o
+	$(CC) $(SHRLIB) -Wl,-soname,libblockarray2.so.1 -o libblockarray2.so.1.0.1 blockarray-static-alloc2.o blockarray-dynamic-alloc2.o -lc
+	ln -s libblockarray1.so.1.0.1 libblockarray1.so.1
+	ln -s libblockarray1.so.1 libblockarray1.so
 
 blockarray-static-alloc2.o: $(TASK1)/blockarray-static-alloc.c
 	$(CC) $(CFLAGS) $(OPT2) $(TASK1)/blockarray-static-alloc.c -o blockarray-static-alloc2.o
 
 blockarray-dynamic-alloc2.o: $(TASK1)/blockarray-dynamic-alloc.c
 	$(CC) $(CFLAGS) $(OPT2) $(TASK1)/blockarray-dynamic-alloc.c -o blockarray-dynamic-alloc2.o
+#---------------------------------
 
-#-------------
-arrtest3: arrtest3.o arrtestdyn3.o arrteststa3.o arrtestutil3.o blockarray3.a
-	$(CC) arrtest3.o arrtestdyn3.o arrteststa3.o arrtestutil3.o blockarray3.a -o arrtest3
+arrtest3: arrtest3.o arrtestdyn3.o arrteststa3.o arrtestutil3.o libblockarray3.so.1.0.1
+	$(CC) arrtest3.o arrtestdyn3.o arrteststa3.o arrtestutil3.o -L$(PWD) -l blockarray3 -Wl,-rpath=$(PWD) -o arrtest3
 
 arrtest3.o: $(TASK2)/arrtest.c
 	$(CC) $(CFLAGS) $(OPT3) $(TASK2)/arrtest.c -o arrtest3.o
@@ -79,10 +83,12 @@ arrteststa3.o: $(TASK2)/arrteststa.c
 	$(CC) $(CFLAGS) $(OPT3) $(TASK2)/arrteststa.c -o arrteststa3.o
 
 arrtestutil3.o: $(TASK2)/arrtestutil.c
-	$(CC) $(CFLAGS) $(OPT3) $(TASK2)/arrtestutil.c -o arrtestutil3.o
+	$(CC) $(CFLAGS) $(OPT3) $(TASK2)/arrtestutil.c -o arrtestutil2.o
 
-blockarray3.a: blockarray-static-alloc3.o blockarray-dynamic-alloc3.o
-	ar rcs blockarray3.a blockarray-static-alloc3.o blockarray-dynamic-alloc3.o
+libblockarray3.so.1.0.1: blockarray-static-alloc3.o blockarray-dynamic-alloc3.o
+	$(CC) $(SHRLIB) -Wl,-soname,libblockarray3.so.1 -o libblockarray3.so.1.0.1 blockarray-static-alloc3.o blockarray-dynamic-alloc3.o -lc
+	ln -s libblockarray1.so.1.0.1 libblockarray1.so.1
+	ln -s libblockarray1.so.1 libblockarray1.so
 
 blockarray-static-alloc3.o: $(TASK1)/blockarray-static-alloc.c
 	$(CC) $(CFLAGS) $(OPT3) $(TASK1)/blockarray-static-alloc.c -o blockarray-static-alloc3.o
@@ -92,4 +98,4 @@ blockarray-dynamic-alloc3.o: $(TASK1)/blockarray-dynamic-alloc.c
 
 .PHONY : clean
 clean:
-	rm *.o arrtest *.a
+	rm *.o libblockarray1.* libblockarray2.* libblockarray3.* arrtest1 arrtest2 arrtest3
