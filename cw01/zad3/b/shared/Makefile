@@ -83,7 +83,7 @@ arrteststa3.o: $(TASK2)/arrteststa.c
 	$(CC) $(CFLAGS) $(OPT3) $(TASK2)/arrteststa.c -o arrteststa3.o
 
 arrtestutil3.o: $(TASK2)/arrtestutil.c
-	$(CC) $(CFLAGS) $(OPT3) $(TASK2)/arrtestutil.c -o arrtestutil2.o
+	$(CC) $(CFLAGS) $(OPT3) $(TASK2)/arrtestutil.c -o arrtestutil3.o
 
 libblockarray3.so.1.0.1: blockarray-static-alloc3.o blockarray-dynamic-alloc3.o
 	$(CC) $(SHRLIB) -Wl,-soname,libblockarray3.so.1 -o libblockarray3.so.1.0.1 blockarray-static-alloc3.o blockarray-dynamic-alloc3.o -lc
