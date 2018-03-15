@@ -34,7 +34,7 @@ void execute_static() {
     int (*lib_st_create_arr)(unsigned int, unsigned int);
     lib_st_create_arr = (int (*)(unsigned int, unsigned int)) dlsym(handle, "blockarray_static_create_array");
 
-    if (lib_st_create_arr == NULL || static_load_lib_functions() == 0) {
+    if (lib_st_create_arr == NULL || static_load_lib_functions() != 0) {
         printf("Couldn't find library functions. \n");
         return;
     }
@@ -75,7 +75,7 @@ void execute_dynamic() {
     lib_dyn_create_arr = (struct CharBlockArray *(*)(unsigned int, unsigned int)) dlsym(handle,
                                                                                         "blockarray_dynamic_create_array");
 
-    if (lib_dyn_create_arr == NULL || dynamic_load_lib_functions() == 0) {
+    if (lib_dyn_create_arr == NULL || dynamic_load_lib_functions() != 0) {
         printf("Couldn't find library functions. \n");
         return;
     }

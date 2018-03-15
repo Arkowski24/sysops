@@ -7,7 +7,7 @@ all: arrtest
 	./arrtest d 10000 10000 init rmin 5000 armin 5000 fnd 200 > dynamic_report.txt
 
 arrtest: arrtest.o arrtestdyn.o arrteststa.o arrtestutil.o libblockarray.so.1.0.1
-	$(CC) arrtest.o arrtestdyn.o arrteststa.o arrtestutil.o -Wl,-rpath=$(PWD) -o arrtest
+	$(CC) arrtest.o arrtestdyn.o arrteststa.o arrtestutil.o -Wl,-rpath=$(PWD) -o arrtest -ldl
 
 arrtest.o: src/arrtest.c
 	$(CC) $(CFLAGS) src/arrtest.c
