@@ -3,7 +3,6 @@
 #include "arrtest.h"
 
 int oprC = 0;
-extern char blockArray[MAX_ARRAY_LENGTH][MAX_BLOCK_LENGTH];
 struct Operation *operations[3] = {NULL};
 unsigned int allocationType, arrayLength, blockLength;
 void *handle;

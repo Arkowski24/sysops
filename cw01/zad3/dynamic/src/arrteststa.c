@@ -21,9 +21,9 @@ char *(*lib_st_fnd_nrst)(unsigned int);
 int static_load_lib_functions() {
     lib_st_delete_arr = (void (*)()) dlsym(handle, "blockarray_static_delete_array");
     lib_st_clear = (void (*)()) dlsym(handle, "blockarray_static_clear_array");
-    lib_st_insert = (int (*)(char *, unsigned int)) dlsym(handle, "blockarray_dynamic_insert_block");
-    lib_st_remove = (void (*)(unsigned int)) dlsym(handle, "blockarray_dynamic_remove_block");
-    lib_st_fnd_nrst = (char *(*)(unsigned int)) dlsym(handle, "blockarray_dynamic_find_nearest_sum_block");
+    lib_st_insert = (int (*)(char *, unsigned int)) dlsym(handle, "blockarray_static_insert_block");
+    lib_st_remove = (void (*)(unsigned int)) dlsym(handle, "blockarray_static_remove_block");
+    lib_st_fnd_nrst = (char *(*)(unsigned int)) dlsym(handle, "blockarray_static_find_nearest_sum_block");
 
     if (lib_st_delete_arr == NULL || lib_st_clear == NULL || lib_st_insert == NULL || lib_st_remove == NULL ||
         lib_st_fnd_nrst == NULL) { return 1; }
