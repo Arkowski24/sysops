@@ -5,7 +5,7 @@ SHRLIB=-Wall -std=c99 -fPIC -shared
 all: arrtest
 
 arrtest: arrtest.o arrtestdyn.o arrteststa.o arrtestutil.o libblockarray.so.1.0.1
-	$(CC) arrtest.o arrtestdyn.o arrteststa.o arrtestutil.o libblockarray.so.1.0.1 -o arrtest
+	$(CC) arrtest.o arrtestdyn.o arrteststa.o arrtestutil.o -L$(PWD) -l blockarray -Wl,-rpath=$(PWD) -o arrtest
 
 arrtest.o: ../../zad2/arrtest.c
 	$(CC) $(CFLAGS) ../../zad2/arrtest.c
@@ -22,7 +22,7 @@ arrtestutil.o: ../../zad2/arrtestutil.c
 libblockarray.so.1.0.1: blockarray-static-alloc.o blockarray-dynamic-alloc.o
 	$(CC) $(SHRLIB) -Wl,-soname,libblockarray.so.1 -o libblockarray.so.1.0.1 blockarray-static-alloc.o blockarray-dynamic-alloc.o -lc
 	ln -s libblockarray.so.1.0.1 libblockarray.so.1
-    ln -s libblockarray.so.1 libblockarray.so
+	ln -s libblockarray.so.1 libblockarray.so
 
 blockarray-static-alloc.o: ../../zad1/blockarray-static-alloc.c
 	$(CC) $(CFLAGS) ../../zad1/blockarray-static-alloc.c
