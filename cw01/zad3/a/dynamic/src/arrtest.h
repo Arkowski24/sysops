@@ -8,8 +8,8 @@
 #include <stdlib.h>
 #include <dlfcn.h>
 
-#include "../../../zad1/blockarray-dynamic-alloc.h"
-#include "../../../zad1/blockarray-static-alloc.h"
+#include "../../../../zad1/blockarray-dynamic-alloc.h"
+#include "../../../../zad1/blockarray-static-alloc.h"
 
 struct Operation {
     short int operationType;

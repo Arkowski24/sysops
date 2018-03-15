@@ -1,0 +1,53 @@
+Static array initialization times:
+Blocks count: 10000, block's length: 10000
+Real time: 436 ticks.
+System time: 37 ticks.
+User time: 399 ticks.
+
+Find nearest-sum block in static array:
+Real time: 61 ticks.
+System time: 2 ticks.
+User time: 58 ticks.
+
+Remove and then insert blocks in static array:
+Number of removed/inserted blocks: 10000
+Real time: 459 ticks.
+System time: 1 ticks.
+User time: 458 ticks.
+
+Remove and insert alternatively in static array:
+Number of removed/inserted blocks: 10000
+Real time: 465 ticks.
+System time: 6 ticks.
+User time: 458 ticks.
+
+--------------------------------------------------------------
+Dynamic array initialization times:
+Blocks count: 10000, block's length: 10000
+Real time: 180 ticks.
+System time: 21 ticks.
+User time: 158 ticks.
+
+Find nearest-sum block in dynamic array:
+Real time: 63 ticks.
+System time: 4 ticks.
+User time: 59 ticks.
+
+Remove and then insert blocks in dynamic array:
+Number of removed/inserted blocks: 10000
+Real time: 191 ticks.
+System time: 30 ticks.
+User time: 161 ticks.
+
+Remove and insert alternatively in dynamic array:
+Number of removed/inserted blocks: 10000
+Real time: 172 ticks.
+System time: 11 ticks.
+User time: 161 ticks.
+
+-------------------------------------
+Komentarz:
+1. Implementacja oparta na alokacji dynamicznej działa szybciej niż ta oparta na statycznej. Różnice wynikają z konieczności przekopiowania zawartości dołączanej tablicy.
+2. Wyszukiwanie najbardziej podobnego bloku jest odrobinę szybsze w przypadku użycia tablicy statycznej.
+3. W przypadku alokacji dynamicznej szybsze było naprzemienne usuwanie i dodawanie, w przypadku statycznej sekwencyjne. Różnice nie były jednak duże.
+4. Z uwagi na częste używanie malloc/calloc, system time był dłuższy dla alokacji dynamicznej.
