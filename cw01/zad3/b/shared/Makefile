@@ -60,8 +60,8 @@ arrtestutil2.o: $(TASK2)/arrtestutil.c
 
 libblockarray2.so.1.0.1: blockarray-static-alloc2.o blockarray-dynamic-alloc2.o
 	$(CC) $(SHRLIB) -Wl,-soname,libblockarray2.so.1 -o libblockarray2.so.1.0.1 blockarray-static-alloc2.o blockarray-dynamic-alloc2.o -lc
-	ln -s libblockarray1.so.1.0.1 libblockarray1.so.1
-	ln -s libblockarray1.so.1 libblockarray1.so
+	ln -s libblockarray2.so.1.0.1 libblockarray2.so.1
+	ln -s libblockarray2.so.1 libblockarray2.so
 
 blockarray-static-alloc2.o: $(TASK1)/blockarray-static-alloc.c
 	$(CC) $(CFLAGS) $(OPT2) $(TASK1)/blockarray-static-alloc.c -o blockarray-static-alloc2.o
@@ -87,8 +87,8 @@ arrtestutil3.o: $(TASK2)/arrtestutil.c
 
 libblockarray3.so.1.0.1: blockarray-static-alloc3.o blockarray-dynamic-alloc3.o
 	$(CC) $(SHRLIB) -Wl,-soname,libblockarray3.so.1 -o libblockarray3.so.1.0.1 blockarray-static-alloc3.o blockarray-dynamic-alloc3.o -lc
-	ln -s libblockarray1.so.1.0.1 libblockarray1.so.1
-	ln -s libblockarray1.so.1 libblockarray1.so
+	ln -s libblockarray3.so.1.0.1 libblockarray3.so.1
+	ln -s libblockarray3.so.1 libblockarray3.so
 
 blockarray-static-alloc3.o: $(TASK1)/blockarray-static-alloc.c
 	$(CC) $(CFLAGS) $(OPT3) $(TASK1)/blockarray-static-alloc.c -o blockarray-static-alloc3.o
