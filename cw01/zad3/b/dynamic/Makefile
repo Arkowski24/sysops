@@ -98,4 +98,4 @@ blockarray-dynamic-alloc3.o: $(TASK1)/blockarray-dynamic-alloc.c
 
 .PHONY : clean
 clean:
-	rm *.o libblockarray.* arrtest
+	rm *.o libblockarray1.* libblockarray2.* libblockarray3.* arrtest1 arrtest2 arrtest3
