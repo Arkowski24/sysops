@@ -23,4 +23,4 @@ blockarray-dynamic-alloc.o: blockarray-dynamic-alloc.c
 	$(CC) $(CFLAGS) blockarray-dynamic-alloc.c
 
 clean:
-	rm *.o blockarray_static
+	rm *.o *.a blockarray_static libblockarray.so.1.0.1
