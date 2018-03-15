@@ -4,7 +4,7 @@
 #include "arrtest.h"
 
 extern int oprC;
-extern struct Operation *operations[3];
+extern struct Operation *operations[OPERATIONS_NUMBER];
 extern unsigned int allocationType, arrayLength, blockLength;
 
 void to_low_letters(char *str) {
@@ -50,7 +50,7 @@ int get_allocation_method(char **argv) {
 }
 
 int parse_options(int argc, char **argv) {
-    for (int i = 4; i < argc; ++i) {
+    for (int i = 4; i < argc && oprC < OPERATIONS_NUMBER; ++i) {
         to_low_letters((argv[i]));
 
         //init - Initialize table, no additional arguments

@@ -1,6 +1,8 @@
 #ifndef CHARBLOCKARRAY_ARRTEST_H
 #define CHARBLOCKARRAY_ARRTEST_H
 
+#define OPERATIONS_NUMBER 4
+
 #include <sys/times.h>
 #include "../zad1/blockarray-dynamic-alloc.h"
 #include "../zad1/blockarray-static-alloc.h"
@@ -41,6 +43,8 @@ void static_insert(unsigned int blocksCount, unsigned int blockLength);
 void static_remove(unsigned int blocksCount);
 
 void dynamic_init(struct CharBlockArray *blockArray, unsigned int arrayLength, unsigned int blockLength);
+
+void dynamic_delete(struct CharBlockArray *blockArray);
 
 void dynamic_clear(struct CharBlockArray *blockArray);
 

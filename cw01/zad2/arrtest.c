@@ -75,4 +75,5 @@ void execute_dynamic() {
                 break;
         }
     }
+    dynamic_delete(blockArray);
 }

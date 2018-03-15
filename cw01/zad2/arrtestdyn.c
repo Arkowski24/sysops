@@ -29,6 +29,10 @@ void dynamic_init(struct CharBlockArray *blockArray, unsigned int arrayLength, u
     availableBlocks = arrayLength;
 }
 
+void dynamic_delete(struct CharBlockArray *blockArray) {
+    blockarray_dynamic_delete_array(blockArray, 1);
+}
+
 void dynamic_clear(struct CharBlockArray *blockArray) {
     startTime = times(&startCPU);
     blockarray_dynamic_clear_array(blockArray);
