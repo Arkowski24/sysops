@@ -5,7 +5,9 @@ SHRLIB=-Wall -std=c99 -fPIC -shared
 all: arrtest
 
 arrtest: arrtest.o arrtestdyn.o arrteststa.o arrtestutil.o libblockarray.so.1.0.1
-	$(CC) arrtest.o arrtestdyn.o arrteststa.o arrtestutil.o -l libblockarray.so.1.0.1 -o arrtest
+	$(CC) arrtest.o arrtestdyn.o arrteststa.o arrtestutil.o libblockarray.so.1.0.1 -o arrtest
+	ln -s libblockarray.so.1.0.1 libblockarray.so.1
+	ln -s libblockarray.so.1 libblockarray.so
 
 arrtest.o: ../../zad2/arrtest.c
 	$(CC) $(CFLAGS) ../../zad2/arrtest.c
