@@ -27,7 +27,7 @@ libblockarray.so.1.0.1: blockarray-static-alloc.o blockarray-dynamic-alloc.o
 	ln -s libblockarray.so.1.0.1 libblockarray.so.1
 	ln -s libblockarray.so.1 libblockarray.so
 
-blockarray-static-alloc.o: $(TASK1)/zad1/blockarray-static-alloc.c
+blockarray-static-alloc.o: $(TASK1)/blockarray-static-alloc.c
 	$(CC) $(CFLAGS) $(TASK1)/blockarray-static-alloc.c
 
 blockarray-dynamic-alloc.o: $(TASK1)/blockarray-dynamic-alloc.c
