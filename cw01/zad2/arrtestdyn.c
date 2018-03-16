@@ -14,10 +14,7 @@ void dynamic_init(struct CharBlockArray *blockArray, unsigned int arrayLength, u
 
     startTime = times(&startCPU);
     for (int i = 0; i < arrayLength; ++i) {
-        char *inArr = malloc(sizeof(char) * blockLength);
-        for (int j = 0; j < blockLength; ++j) {
-            inArr[j] = (char) rand();
-        }
+        char *inArr = create_random_block(blockArray->blockLength);
         blockarray_dynamic_insert_block(blockArray, inArr);
     }
     endTime = times(&endCPU);

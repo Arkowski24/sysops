@@ -3,9 +3,11 @@
 struct CharBlockArray *blockarray_dynamic_create_array(unsigned int arrayLength, unsigned int blockLength) {
     struct CharBlockArray *arrPtr;
     arrPtr = (struct CharBlockArray *) calloc(sizeof(struct CharBlockArray), 1);
-    arrPtr->arrayLength = arrayLength;
-    arrPtr->blockLength = blockLength;
-    arrPtr->array = (char **) calloc(sizeof(char *), arrayLength);
+    if (arrPtr != NULL) {
+        arrPtr->arrayLength = arrayLength;
+        arrPtr->blockLength = blockLength;
+        arrPtr->array = (char **) calloc(sizeof(char *), arrayLength);
+    }
     return arrPtr;
 }
 
@@ -25,7 +27,9 @@ void blockarray_dynamic_clear_array(struct CharBlockArray *blkArray) {
     if (blkArray == NULL) return;
     if (blkArray->array != NULL) {
         for (int i = 0; i < blkArray->arrayLength; ++i) {
-            free(blkArray->array[i]);
+            if (blkArray->array[i] != NULL) {
+                free(blkArray->array[i]);
+            }
         }
     }
 }

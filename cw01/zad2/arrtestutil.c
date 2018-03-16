@@ -56,6 +56,10 @@ int parse_options(int argc, char **argv) {
         //init - Initialize table, no additional arguments
         if (strcmp(argv[i], "init") == 0) {
             operations[oprC] = malloc(sizeof(struct Operation));
+            if (operations[oprC] == NULL) {
+                printf("Error during allocation. \n");
+                return 1;
+            }
             operations[oprC]->operationType = 0;
             oprC++;
         } else {
@@ -92,6 +96,10 @@ int parse_options(int argc, char **argv) {
             }
 
             operations[oprC] = malloc(sizeof(struct Operation));
+            if (operations[oprC] == NULL) {
+                printf("Error during allocation. \n");
+                return 1;
+            }
             operations[oprC]->operationType = optType;
             operations[oprC]->argument = arg;
 
@@ -104,8 +112,10 @@ int parse_options(int argc, char **argv) {
 
 char *create_random_block(unsigned int blockLength) {
     char *inArr = malloc(sizeof(char) * blockLength);
-    for (int i = 0; i < blockLength; ++i) {
-        inArr[i] = (char) rand();
+    if (inArr != NULL) {
+        for (int i = 0; i < blockLength; ++i) {
+            inArr[i] = (char) rand();
+        }
     }
     return inArr;
 }

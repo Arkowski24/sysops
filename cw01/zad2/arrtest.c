@@ -17,7 +17,9 @@ int main(int argc, char *argv[]) {
     }
 
     for (int i = 0; i < oprC; ++i) {
-        free(operations[i]);
+        if (operations[i] != NULL) {
+            free(operations[i]);
+        }
     }
 }
 
@@ -51,6 +53,10 @@ void execute_static() {
 
 void execute_dynamic() {
     struct CharBlockArray *blockArray = blockarray_dynamic_create_array(arrayLength, blockLength);
+    if (blockArray == NULL) {
+        printf("Error during allocation. \n");
+        return;
+    }
     for (int i = 0; i < oprC; ++i) {
         switch (operations[i]->operationType) {
             case 0:

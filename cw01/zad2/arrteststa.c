@@ -15,8 +15,10 @@ void static_init(unsigned int arrayLength, unsigned int blockLength) {
     startTime = times(&startCPU);
     for (int i = 0; i < arrayLength; ++i) {
         char *inArr = create_random_block(blockLength);
-        blockarray_static_insert_block(inArr, blockLength);
-        free(inArr);
+        if (inArr != NULL) {
+            blockarray_static_insert_block(inArr, blockLength);
+            free(inArr);
+        }
     }
     endTime = times(&endCPU);
 
@@ -53,8 +55,10 @@ void static_remove_and_insert(unsigned int blocksCount, unsigned int blockLength
     }
     for (int j = 0; j < blocksCount; ++j) {
         char *inArr = create_random_block(blockLength);
-        blockarray_static_insert_block(inArr, blockLength);
-        free(inArr);
+        if (inArr != NULL) {
+            blockarray_static_insert_block(inArr, blockLength);
+            free(inArr);
+        }
     }
     endTime = times(&endCPU);
 
@@ -68,8 +72,10 @@ void static_alternatively_remove_and_insert(unsigned int blocksCount, unsigned i
     for (unsigned int i = 0; i < blocksCount; ++i) {
         blockarray_static_remove_block(i);
         char *inArr = create_random_block(blockLength);
-        blockarray_static_insert_block(inArr, blockLength);
-        free(inArr);
+        if (inArr != NULL) {
+            blockarray_static_insert_block(inArr, blockLength);
+            free(inArr);
+        }
     }
     endTime = times(&endCPU);
 
@@ -82,8 +88,10 @@ void static_insert(unsigned int blocksCount, unsigned int blockLength) {
     startTime = times(&startCPU);
     for (int j = 0; j < blocksCount; ++j) {
         char *inArr = create_random_block(blockLength);
-        blockarray_static_insert_block(inArr, blockLength);
-        free(inArr);
+        if (inArr != NULL) {
+            blockarray_static_insert_block(inArr, blockLength);
+            free(inArr);
+        }
     }
     endTime = times(&endCPU);
 
