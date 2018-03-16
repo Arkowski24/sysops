@@ -6,7 +6,7 @@ TASK2=../../../zad2
 
 all: arrtest
 	./arrtest s 10000 10000 init rmin 5000 armin 5000 fnd 200 > static_report.txt
-    ./arrtest d 10000 10000 init rmin 5000 armin 5000 fnd 200 > dynamic_report.txt
+	./arrtest d 10000 10000 init rmin 5000 armin 5000 fnd 200 > dynamic_report.txt
 
 arrtest: arrtest.o arrtestdyn.o arrteststa.o arrtestutil.o blockarray.a
 	$(CC) arrtest.o arrtestdyn.o arrteststa.o arrtestutil.o blockarray.a -o arrtest

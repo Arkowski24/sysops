@@ -92,4 +92,4 @@ blockarray-dynamic-alloc3.o: $(TASK1)/blockarray-dynamic-alloc.c
 
 .PHONY : clean
 clean:
-	rm *.o arrtest *.a
+	rm *.o *.a arrtest1 arrtest2 arrtest3
