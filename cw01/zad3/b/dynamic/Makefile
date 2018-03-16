@@ -20,7 +20,7 @@ arrtest1: arrtest1.o arrtestdyn1.o arrteststa1.o arrtestutil1.o libblockarray1.s
 	$(CC) arrtest1.o arrtestdyn1.o arrteststa1.o arrtestutil1.o -Wl,-rpath=$(PWD) -o arrtest1 -ldl
 
 arrtest1.o: src/arrtest1.c
-	$(CC) $(CFLAGS) $(OPT1) src/arrtest1.c -o arrtest1.o:
+	$(CC) $(CFLAGS) $(OPT1) src/arrtest1.c -o arrtest1.o
 
 arrtestdyn1.o: $(DYNA)/src/arrtestdyn.c
 	$(CC) $(CFLAGS) $(OPT1) $(DYNA)/src/arrtestdyn.c -o arrtestdyn1.o

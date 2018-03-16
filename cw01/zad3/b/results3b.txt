@@ -1,0 +1,452 @@
+STATIC LIBRARY
+Optymalizacja: O0
+
+Static array initialization times:
+Blocks count: 10000, block's length: 10000
+Real time: 438 ticks.
+System time: 38 ticks.
+User time: 399 ticks.
+
+Find nearest-sum block in static array:
+Real time: 61 ticks.
+System time: 3 ticks.
+User time: 59 ticks.
+
+Remove and then insert blocks in static array:
+Number of removed/inserted blocks: 10000
+Real time: 471 ticks.
+System time: 3 ticks.
+User time: 467 ticks.
+
+Remove and insert alternatively in static array:
+Number of removed/inserted blocks: 10000
+Real time: 471 ticks.
+System time: 2 ticks.
+User time: 468 ticks.
+
+Dynamic array initialization times:
+Blocks count: 10000, block's length: 10000
+Real time: 182 ticks.
+System time: 30 ticks.
+User time: 151 ticks.
+
+Find nearest-sum block in dynamic array:
+Real time: 61 ticks.
+System time: 3 ticks.
+User time: 58 ticks.
+
+Remove and then insert blocks in dynamic array:
+Number of removed/inserted blocks: 10000
+Real time: 195 ticks.
+System time: 31 ticks.
+User time: 164 ticks.
+
+Remove and insert alternatively in dynamic array:
+Number of removed/inserted blocks: 10000
+Real time: 173 ticks.
+System time: 10 ticks.
+User time: 163 ticks.
+
+-----------
+Optymalizacja: Os
+
+Static array initialization times:
+Blocks count: 10000, block's length: 10000
+Real time: 439 ticks.
+System time: 35 ticks.
+User time: 402 ticks.
+
+Find nearest-sum block in static array:
+Real time: 61 ticks.
+System time: 3 ticks.
+User time: 58 ticks.
+
+Remove and then insert blocks in static array:
+Number of removed/inserted blocks: 10000
+Real time: 468 ticks.
+System time: 3 ticks.
+User time: 465 ticks.
+
+Remove and insert alternatively in static array:
+Number of removed/inserted blocks: 10000
+Real time: 467 ticks.
+System time: 4 ticks.
+User time: 463 ticks.
+
+Dynamic array initialization times:
+Blocks count: 10000, block's length: 10000
+Real time: 181 ticks.
+System time: 26 ticks.
+User time: 153 ticks.
+
+Find nearest-sum block in dynamic array:
+Real time: 61 ticks.
+System time: 3 ticks.
+User time: 59 ticks.
+
+Remove and then insert blocks in dynamic array:
+Number of removed/inserted blocks: 10000
+Real time: 195 ticks.
+System time: 30 ticks.
+User time: 165 ticks.
+
+Remove and insert alternatively in dynamic array:
+Number of removed/inserted blocks: 10000
+Real time: 174 ticks.
+System time: 10 ticks.
+User time: 164 ticks.
+
+----------------
+Optymalizacja: O3
+
+Static array initialization times:
+Blocks count: 10000, block's length: 10000
+Real time: 432 ticks.
+System time: 31 ticks.
+User time: 400 ticks.
+
+Find nearest-sum block in static array:
+Real time: 59 ticks.
+System time: 1 ticks.
+User time: 58 ticks.
+
+Remove and then insert blocks in static array:
+Number of removed/inserted blocks: 10000
+Real time: 463 ticks.
+System time: 1 ticks.
+User time: 463 ticks.
+
+Remove and insert alternatively in static array:
+Number of removed/inserted blocks: 10000
+Real time: 465 ticks.
+System time: 2 ticks.
+User time: 463 ticks.
+
+Dynamic array initialization times:
+Blocks count: 10000, block's length: 10000
+Real time: 193 ticks.
+System time: 29 ticks.
+User time: 163 ticks.
+
+Find nearest-sum block in dynamic array:
+Real time: 63 ticks.
+System time: 4 ticks.
+User time: 59 ticks.
+
+Remove and then insert blocks in dynamic array:
+Number of removed/inserted blocks: 10000
+Real time: 193 ticks.
+System time: 34 ticks.
+User time: 160 ticks.
+
+Remove and insert alternatively in dynamic array:
+Number of removed/inserted blocks: 10000
+Real time: 174 ticks.
+System time: 10 ticks.
+User time: 163 ticks.
+
+--------------------------
+--------------------------
+SHARED LIBRARY
+Optymalizacja: O0
+
+Static array initialization times:
+Blocks count: 10000, block's length: 10000
+Real time: 449 ticks.
+System time: 33 ticks.
+User time: 415 ticks.
+
+Find nearest-sum block in static array:
+Real time: 60 ticks.
+System time: 1 ticks.
+User time: 59 ticks.
+
+Remove and then insert blocks in static array:
+Number of removed/inserted blocks: 10000
+Real time: 480 ticks.
+System time: 2 ticks.
+User time: 478 ticks.
+
+Remove and insert alternatively in static array:
+Number of removed/inserted blocks: 10000
+Real time: 484 ticks.
+System time: 2 ticks.
+User time: 481 ticks.
+
+Dynamic array initialization times:
+Blocks count: 10000, block's length: 10000
+Real time: 191 ticks.
+System time: 26 ticks.
+User time: 165 ticks.
+
+Find nearest-sum block in dynamic array:
+Real time: 59 ticks.
+System time: 2 ticks.
+User time: 57 ticks.
+
+Remove and then insert blocks in dynamic array:
+Number of removed/inserted blocks: 10000
+Real time: 192 ticks.
+System time: 29 ticks.
+User time: 162 ticks.
+
+Remove and insert alternatively in dynamic array:
+Number of removed/inserted blocks: 10000
+Real time: 172 ticks.
+System time: 7 ticks.
+User time: 165 ticks.
+
+---------------------------
+Optymalizacja: Os
+
+Static array initialization times:
+Blocks count: 10000, block's length: 10000
+Real time: 448 ticks.
+System time: 37 ticks.
+User time: 409 ticks.
+
+Find nearest-sum block in static array:
+Real time: 61 ticks.
+System time: 2 ticks.
+User time: 59 ticks.
+
+Remove and then insert blocks in static array:
+Number of removed/inserted blocks: 10000
+Real time: 482 ticks.
+System time: 7 ticks.
+User time: 475 ticks.
+
+Remove and insert alternatively in static array:
+Number of removed/inserted blocks: 10000
+Real time: 487 ticks.
+System time: 10 ticks.
+User time: 477 ticks.
+
+Dynamic array initialization times:
+Blocks count: 10000, block's length: 10000
+Real time: 191 ticks.
+System time: 25 ticks.
+User time: 164 ticks.
+
+Find nearest-sum block in dynamic array:
+Real time: 58 ticks.
+System time: 2 ticks.
+User time: 57 ticks.
+
+Remove and then insert blocks in dynamic array:
+Number of removed/inserted blocks: 10000
+Real time: 197 ticks.
+System time: 32 ticks.
+User time: 165 ticks.
+
+Remove and insert alternatively in dynamic array:
+Number of removed/inserted blocks: 10000
+Real time: 177 ticks.
+System time: 7 ticks.
+User time: 169 ticks.
+
+---------------------------
+Optymalizacja: O3
+
+Static array initialization times:
+Blocks count: 10000, block's length: 10000
+Real time: 443 ticks.
+System time: 28 ticks.
+User time: 414 ticks.
+
+Find nearest-sum block in static array:
+Real time: 60 ticks.
+System time: 2 ticks.
+User time: 58 ticks.
+
+Remove and then insert blocks in static array:
+Number of removed/inserted blocks: 10000
+Real time: 476 ticks.
+System time: 2 ticks.
+User time: 473 ticks.
+
+Remove and insert alternatively in static array:
+Number of removed/inserted blocks: 10000
+Real time: 476 ticks.
+System time: 3 ticks.
+User time: 474 ticks.
+
+Dynamic array initialization times:
+Blocks count: 10000, block's length: 10000
+Real time: 190 ticks.
+System time: 26 ticks.
+User time: 163 ticks.
+
+Find nearest-sum block in dynamic array:
+Real time: 58 ticks.
+System time: 3 ticks.
+User time: 56 ticks.
+
+Remove and then insert blocks in dynamic array:
+Number of removed/inserted blocks: 10000
+Real time: 195 ticks.
+System time: 29 ticks.
+User time: 165 ticks.
+
+Remove and insert alternatively in dynamic array:
+Number of removed/inserted blocks: 10000
+Real time: 175 ticks.
+System time: 8 ticks.
+User time: 167 ticks.
+
+--------------------------
+--------------------------
+DL LIBRARY
+Optymalizacja: O0
+
+Static array initialization times:
+Blocks count: 10000, block's length: 10000
+Real time: 444 ticks.
+System time: 29 ticks.
+User time: 414 ticks.
+
+Find nearest-sum block in static array:
+Real time: 59 ticks.
+System time: 0 ticks.
+User time: 59 ticks.
+
+Remove and then insert blocks in static array:
+Number of removed/inserted blocks: 10000
+Real time: 477 ticks.
+System time: 3 ticks.
+User time: 473 ticks.
+
+Remove and insert alternatively in static array:
+Number of removed/inserted blocks: 10000
+Real time: 477 ticks.
+System time: 2 ticks.
+User time: 476 ticks.
+
+Dynamic array initialization times:
+Blocks count: 10000, block's length: 10000
+Real time: 190 ticks.
+System time: 28 ticks.
+User time: 161 ticks.
+
+Find nearest-sum block in dynamic array:
+Real time: 59 ticks.
+System time: 2 ticks.
+User time: 57 ticks.
+
+Remove and then insert blocks in dynamic array:
+Number of removed/inserted blocks: 10000
+Real time: 197 ticks.
+System time: 24 ticks.
+User time: 172 ticks.
+
+Remove and insert alternatively in dynamic array:
+Number of removed/inserted blocks: 10000
+Real time: 173 ticks.
+System time: 4 ticks.
+User time: 169 ticks.
+
+---------------------------
+Optymalizacja: Os
+
+Static array initialization times:
+Blocks count: 10000, block's length: 10000
+Real time: 450 ticks.
+System time: 35 ticks.
+User time: 414 ticks.
+
+Find nearest-sum block in static array:
+Real time: 61 ticks.
+System time: 2 ticks.
+User time: 59 ticks.
+
+Remove and then insert blocks in static array:
+Number of removed/inserted blocks: 10000
+Real time: 482 ticks.
+System time: 6 ticks.
+User time: 476 ticks.
+
+Remove and insert alternatively in static array:
+Number of removed/inserted blocks: 10000
+Real time: 488 ticks.
+System time: 11 ticks.
+User time: 476 ticks.
+
+Dynamic array initialization times:
+Blocks count: 10000, block's length: 10000
+Real time: 185 ticks.
+System time: 20 ticks.
+User time: 165 ticks.
+
+Find nearest-sum block in dynamic array:
+Real time: 59 ticks.
+System time: 1 ticks.
+User time: 57 ticks.
+
+Remove and then insert blocks in dynamic array:
+Number of removed/inserted blocks: 10000
+Real time: 197 ticks.
+System time: 30 ticks.
+User time: 167 ticks.
+
+Remove and insert alternatively in dynamic array:
+Number of removed/inserted blocks: 10000
+Real time: 177 ticks.
+System time: 10 ticks.
+User time: 168 ticks.
+
+---------------------------
+Optymalizacja: O3
+
+Static array initialization times:
+Blocks count: 10000, block's length: 10000
+Real time: 447 ticks.
+System time: 40 ticks.
+User time: 406 ticks.
+
+Find nearest-sum block in static array:
+Real time: 61 ticks.
+System time: 2 ticks.
+User time: 58 ticks.
+
+Remove and then insert blocks in static array:
+Number of removed/inserted blocks: 10000
+Real time: 481 ticks.
+System time: 6 ticks.
+User time: 475 ticks.
+
+Remove and insert alternatively in static array:
+Number of removed/inserted blocks: 10000
+Real time: 488 ticks.
+System time: 10 ticks.
+User time: 478 ticks.
+
+Dynamic array initialization times:
+Blocks count: 10000, block's length: 10000
+Real time: 192 ticks.
+System time: 28 ticks.
+User time: 163 ticks.
+
+Find nearest-sum block in dynamic array:
+Real time: 61 ticks.
+System time: 4 ticks.
+User time: 58 ticks.
+
+Remove and then insert blocks in dynamic array:
+Number of removed/inserted blocks: 10000
+Real time: 199 ticks.
+System time: 30 ticks.
+User time: 168 ticks.
+
+Remove and insert alternatively in dynamic array:
+Number of removed/inserted blocks: 10000
+Real time: 179 ticks.
+System time: 11 ticks.
+User time: 169 ticks.
+
+---------------------
+Komentarz:
+1. W przypadku użycia biblioteki statycznej rożnie pomiędzy opcjami optymalizacji nie były duże.
+Poziom o3 okazał się nieco wolniejszy w przypadku inicjalizacji tablicy dynamicznej, lecz zmieszał czas wykonania w trybie jądra.
+2. W przypadku użycia biblioteki dzielonej czas wykonania spadał po użyciu opcji o3 (średni około o 6-10 ticków).
+Przy użyciu opcji -os program potrzebował więcej czasu na zaczęcie przetwarzania pierwszej instrukcji.
+3. Dla biblioteki ładowanej dynamicznie użycie opcji -o3 nie zapewniało znaczącego przyśpieszenia, czasami powodowało wręcz zwiększenie czasu wykonania.
