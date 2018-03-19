@@ -11,8 +11,6 @@ void sys_sort(char *filePath, unsigned int recordsCount, unsigned int recordLeng
 
 void sys_copy(char *filePathFrom, char *filePathTo, unsigned int recordsCount, unsigned int recordLength);
 
-void lib_generate(char *filePath, unsigned int recordsCount, unsigned int recordLength);
-
 void lib_sort(char *filePath, unsigned int recordsCount, unsigned int recordLength);
 
 void lib_copy(char *filePathFrom, char *filePathTo, unsigned int recordsCount, unsigned int recordLength);

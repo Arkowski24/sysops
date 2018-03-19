@@ -57,23 +57,6 @@ void lib_read_from_file(FILE *file, unsigned char *buffer, unsigned int bitsCoun
     }
 }
 
-void lib_generate(char *filePath, unsigned int recordsCount, unsigned int recordLength) {
-    assert(filePath != NULL);
-    assert(recordLength > 0);
-    assert(recordsCount > 0);
-
-    unsigned char *buf = create_buffer(recordLength);
-    FILE *file = lib_create_or_overwrite_file(filePath);
-
-    for (unsigned int i = 0; i < recordsCount; ++i) {
-        for (int j = 0; j < recordLength; ++j) {
-            buf[j] = (unsigned char) rand();
-        }
-        lib_write_to_file(file, buf, recordLength);
-    }
-    fclose(file);
-}
-
 void lib_sort(char *filePath, unsigned int recordsCount, unsigned int recordLength) {
     assert(filePath != NULL);
     assert(recordLength != 0);
