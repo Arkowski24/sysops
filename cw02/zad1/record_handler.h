@@ -5,8 +5,10 @@
 #ifndef SYSOPS_RECORD_HANDLER_H
 #define SYSOPS_RECORD_HANDLER_H
 
-void generate_sys(char *filePath, unsigned int recordLength, unsigned int recordsCount);
+void sys_generate(char *filePath, unsigned int recordLength, unsigned int recordsCount);
 
-void sort_sys(char *filePath, unsigned int recordLength, unsigned int recordsCount);
+void sys_sort(char *filePath, unsigned int recordLength, unsigned int recordsCount);
+
+void sys_copy(char *filePathFrom, char *filePathTo, unsigned int recordLength, unsigned int recordsCount);
 
 #endif //SYSOPS_RECORD_HANDLER_H
