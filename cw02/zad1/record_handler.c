@@ -1,29 +1,86 @@
 #include <unistd.h>
-#include <string.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 #include "record_handler.h"
 
-void generate_sys(char *filePath, unsigned int recordLength, unsigned int recordsCount);
+void exit_failure_unknown_type(char *type) {
+    printf("Unknown %s.", type);
+    exit(EXIT_FAILURE);
+}
+
+void exit_failure_not_enough_arguments() {
+    printf("Not enough arguments.");
+    exit(EXIT_FAILURE);
+}
+
+void exit_failure_zero_argument(char *argumentName) {
+    printf("Argument %s cannot be 0.", argumentName);
+    exit(EXIT_FAILURE);
+}
+
+void parseCommandLine(int argc, char *argv[]);
 
 int main(int argc, char *argv[]) {
     srand(time(NULL));
-    if (strcmp(argv[1], "generate") == 0) {
-        char *path = argv[2];
-        unsigned int rL = atoi(argv[3]);
-        unsigned int rC = atoi(argv[4]);
-        generate_sys(path, rL, rC);
+
+    if (argc < 6) {
+        exit_failure_not_enough_arguments();
     }
+    parseCommandLine(argc, argv);
 
     return 0;
 }
 
-void generate_lib(char *filePath, unsigned int recordLength, unsigned int recordsCount) {
+void parseCommandLine(int argc, char *argv[]) {
+    char *command = argv[1];
+    if (strcmp(command, "copy") == 0) {
+        if (argc < 7) {
+            exit_failure_not_enough_arguments();
+        }
+        char *filePathFrom = argv[2];
+        char *filePathTo = argv[3];
+        unsigned int recordLength = strtoul(argv[4], NULL, 10);
+        unsigned int recordCount = strtoul(argv[5], NULL, 10);
+        char *variant = argv[6];
 
+        if (recordLength == 0 || recordCount == 0) {
+            exit_failure_zero_argument("record length/count");
+        }
+
+        if (strcmp(variant, "sys") == 0) {
+            sys_copy(filePathFrom, filePathTo, recordLength, recordCount);
+        } else if (strcmp(variant, "lib") == 0) {
+            lib_copy(filePathFrom, filePathTo, recordLength, recordCount);
+        } else {
+            exit_failure_unknown_type("variant");
+        }
+
+    } else {
+        char *filePath = argv[2];
+        unsigned int recordLength = strtoul(argv[3], NULL, 10);
+        unsigned int recordCount = strtoul(argv[4], NULL, 10);
+        char *variant = argv[5];
+
+        if (strcmp(variant, "sys") == 0) {
+            if (strcmp(command, "generate") == 0) {
+                sys_generate(filePath, recordLength, recordCount);
+            } else if (strcmp(command, "sort") == 0) {
+                sys_sort(filePath, recordLength, recordCount);
+            } else {
+                exit_failure_unknown_type("command");
+            }
+        } else if (strcmp(variant, "lib") == 0) {
+            if (strcmp(command, "generate") == 0) {
+                lib_generate(filePath, recordLength, recordCount);
+            } else if (strcmp(command, "sort") == 0) {
+                lib_sort(filePath, recordLength, recordCount);
+            } else {
+                exit_failure_unknown_type("command");
+            }
+        } else {
+            exit_failure_unknown_type("variant");
+        }
+    }
 }
-
-void sort();
-
-void copy();
-
-void open_file_sys();
