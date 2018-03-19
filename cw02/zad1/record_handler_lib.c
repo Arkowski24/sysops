@@ -67,7 +67,7 @@ void read_from_file(FILE *file, unsigned char *buffer, unsigned int bitsCount) {
     }
 }
 
-void sys_generate(char *filePath, unsigned int recordLength, unsigned int recordsCount) {
+void lib_generate(char *filePath, unsigned int recordLength, unsigned int recordsCount) {
     assert(filePath != NULL);
     assert(recordLength > 0);
     assert(recordsCount > 0);
@@ -84,7 +84,7 @@ void sys_generate(char *filePath, unsigned int recordLength, unsigned int record
     fclose(file);
 }
 
-void sys_sort(char *filePath, unsigned int recordLength, unsigned int recordsCount) {
+void lib_sort(char *filePath, unsigned int recordLength, unsigned int recordsCount) {
     assert(filePath != NULL);
     assert(recordLength != 0);
     assert(recordsCount != 0);
@@ -113,7 +113,7 @@ void sys_sort(char *filePath, unsigned int recordLength, unsigned int recordsCou
     fclose(file);
 }
 
-void sys_copy(char *filePathFrom, char *filePathTo, unsigned int recordLength, unsigned int recordsCount) {
+void lib_copy(char *filePathFrom, char *filePathTo, unsigned int recordLength, unsigned int recordsCount) {
     assert(filePathFrom != NULL);
     assert(filePathTo != NULL);
     assert(recordLength != 0);

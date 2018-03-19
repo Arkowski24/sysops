@@ -11,4 +11,10 @@ void sys_sort(char *filePath, unsigned int recordLength, unsigned int recordsCou
 
 void sys_copy(char *filePathFrom, char *filePathTo, unsigned int recordLength, unsigned int recordsCount);
 
+void lib_generate(char *filePath, unsigned int recordLength, unsigned int recordsCount);
+
+void lib_sort(char *filePath, unsigned int recordLength, unsigned int recordsCount);
+
+void lib_copy(char *filePathFrom, char *filePathTo, unsigned int recordLength, unsigned int recordsCount);
+
 #endif //SYSOPS_RECORD_HANDLER_H
