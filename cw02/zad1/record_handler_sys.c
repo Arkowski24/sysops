@@ -59,7 +59,7 @@ void sys_read_from_file(int fileDescriptor, unsigned char *buffer, unsigned int 
     }
 }
 
-void sys_generate(char *filePath, unsigned int recordLength, unsigned int recordsCount) {
+void sys_generate(char *filePath, unsigned int recordsCount, unsigned int recordLength) {
     assert(filePath != NULL);
     assert(recordLength > 0);
     assert(recordsCount > 0);
@@ -76,7 +76,7 @@ void sys_generate(char *filePath, unsigned int recordLength, unsigned int record
     close(fileDesc);
 }
 
-void sys_sort(char *filePath, unsigned int recordLength, unsigned int recordsCount) {
+void sys_sort(char *filePath, unsigned int recordsCount, unsigned int recordLength) {
     assert(filePath != NULL);
     assert(recordLength != 0);
     assert(recordsCount != 0);
@@ -105,7 +105,7 @@ void sys_sort(char *filePath, unsigned int recordLength, unsigned int recordsCou
     close(fileDesc);
 }
 
-void sys_copy(char *filePathFrom, char *filePathTo, unsigned int recordLength, unsigned int recordsCount) {
+void sys_copy(char *filePathFrom, char *filePathTo, unsigned int recordsCount, unsigned int recordLength) {
     assert(filePathFrom != NULL);
     assert(filePathTo != NULL);
     assert(recordLength != 0);
