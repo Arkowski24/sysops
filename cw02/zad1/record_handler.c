@@ -7,17 +7,17 @@
 #include "record_handler.h"
 
 void exit_failure_unknown_type(char *type) {
-    printf("Unknown %s.", type);
+    printf("Unknown %s.\n", type);
     exit(EXIT_FAILURE);
 }
 
 void exit_failure_not_enough_arguments() {
-    printf("Not enough arguments.");
+    printf("Not enough arguments.\n");
     exit(EXIT_FAILURE);
 }
 
 void exit_failure_zero_argument(char *argumentName) {
-    printf("Argument %s cannot be 0.", argumentName);
+    printf("Argument %s cannot be 0.\n", argumentName);
     exit(EXIT_FAILURE);
 }
 
