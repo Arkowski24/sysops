@@ -17,4 +17,6 @@ void lib_sort(char *filePath, unsigned int recordLength, unsigned int recordsCou
 
 void lib_copy(char *filePathFrom, char *filePathTo, unsigned int recordLength, unsigned int recordsCount);
 
+unsigned char *create_buffer(unsigned int size);
+
 #endif //SYSOPS_RECORD_HANDLER_H

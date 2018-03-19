@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
+#include <sys/errno.h>
 #include "record_handler.h"
 
 void exit_failure_unknown_type(char *type) {
@@ -83,4 +84,14 @@ void parseCommandLine(int argc, char *argv[]) {
             exit_failure_unknown_type("variant");
         }
     }
+}
+
+unsigned char *create_buffer(unsigned int size) {
+    unsigned char *buf = malloc(sizeof(unsigned char) * size);
+    int error = errno;
+    if (buf == NULL) {
+        printf("Memory allocation error: %s\n", strerror(error));
+        exit(EXIT_FAILURE);
+    }
+    return buf;
 }
