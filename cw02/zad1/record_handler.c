@@ -7,17 +7,17 @@
 #include "record_handler.h"
 
 void exit_failure_unknown_type(char *type) {
-    printf("Unknown %s.\n", type);
+    fprintf(stderr, "Unknown %s.\n", type);
     exit(EXIT_FAILURE);
 }
 
 void exit_failure_not_enough_arguments() {
-    printf("Not enough arguments.\n");
+    fprintf(stderr, "Not enough arguments.\n");
     exit(EXIT_FAILURE);
 }
 
 void exit_failure_zero_argument(char *argumentName) {
-    printf("Argument %s cannot be 0.\n", argumentName);
+    fprintf(stderr, "Argument %s cannot be 0.\n", argumentName);
     exit(EXIT_FAILURE);
 }
 
@@ -87,7 +87,7 @@ unsigned char *create_buffer(unsigned int size) {
     unsigned char *buf = malloc(sizeof(unsigned char) * size);
     int error = errno;
     if (buf == NULL) {
-        printf("Memory allocation error: %s\n", strerror(error));
+        fprintf(stderr, "Memory allocation error: %s\n", strerror(error));
         exit(EXIT_FAILURE);
     }
     return buf;

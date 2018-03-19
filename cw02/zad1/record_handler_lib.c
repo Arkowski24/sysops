@@ -6,33 +6,35 @@
 #include <assert.h>
 #include <memory.h>
 #include <stdlib.h>
+#include <sys/stat.h>
 #include "record_handler.h"
 
 FILE *lib_create_or_overwrite_file(char *filePath) {
-    FILE *fileDesc = fopen(filePath, "r+b");
+    FILE *file = fopen(filePath, "r+b");
     int error = errno;
-    if (fileDesc < 0 && error == EEXIST) {
+    if (file == NULL && error == EEXIST) {
         char res;
         printf("File already exists. Overwrite it? (y/n) ");
         scanf("%c", &res);
         if (res == 'y' || res == 'Y') {
-            fileDesc = fopen(filePath, "w+b");
+            file = fopen(filePath, "w+b");
             error = errno;
         }
     }
 
-    if (fileDesc < 0) {
-        printf("File open error: %s\n", strerror(error));
+    if (file == NULL) {
+        fprintf(stderr, "File open error: %s\n", strerror(error));
         exit(EXIT_FAILURE);
     }
-    return fileDesc;
+    chmod(filePath, 644);
+    return file;
 }
 
 FILE *lib_open_file(char *filePath, char *mode) {
     FILE *fileDesc = fopen(filePath, mode);
     int error = errno;
-    if (fileDesc < 0) {
-        printf("File open error: %s\n", strerror(error));
+    if (fileDesc == NULL) {
+        fprintf(stderr, "File open error: %s\n", strerror(error));
         exit(EXIT_FAILURE);
     }
 
@@ -40,19 +42,19 @@ FILE *lib_open_file(char *filePath, char *mode) {
 }
 
 void lib_write_to_file(FILE *file, unsigned char *buffer, unsigned int bitsCount) {
-    unsigned long long writtenBits = fwrite(buffer, bitsCount, 1, file);
+    unsigned long long writtenElements = fwrite(buffer, bitsCount, 1, file);
     int error = errno;
-    if (writtenBits != bitsCount) {
-        printf("Write to file error: %s\n", strerror(error));
+    if (writtenElements != 1) {
+        fprintf(stderr, "Write to file error: %s\n", strerror(error));
         exit(EXIT_FAILURE);
     }
 }
 
 void lib_read_from_file(FILE *file, unsigned char *buffer, unsigned int bitsCount) {
-    unsigned long long readBits = fread(buffer, bitsCount, 1, file);
+    unsigned long long readElements = fread(buffer, bitsCount, 1, file);
     int error = errno;
-    if (readBits != bitsCount) {
-        printf("Read from file error: %s\n", strerror(error));
+    if (readElements != 1) {
+        fprintf(stderr, "Read from file error: %s\n", strerror(error));
         exit(EXIT_FAILURE);
     }
 }

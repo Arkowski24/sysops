@@ -11,20 +11,20 @@
 #include "record_handler.h"
 
 int sys_create_or_overwrite_file(char *filePath) {
-    int fileDesc = open(filePath, O_CREAT | O_EXCL | O_TRUNC | O_WRONLY);
+    int fileDesc = open(filePath, O_CREAT | O_EXCL | O_TRUNC | O_WRONLY, 644);
     int error = errno;
     if (fileDesc < 0 && error == EEXIST) {
         char res;
         printf("File already exists. Overwrite it? (y/n) ");
         scanf("%c", &res);
         if (res == 'y' || res == 'Y') {
-            fileDesc = open(filePath, O_CREAT | O_TRUNC | O_WRONLY);
+            fileDesc = open(filePath, O_CREAT | O_TRUNC | O_WRONLY, 644);
             error = errno;
         }
     }
 
     if (fileDesc < 0) {
-        printf("File open error: %s\n", strerror(error));
+        fprintf(stderr, "File open error: %s\n", strerror(error));
         exit(EXIT_FAILURE);
     }
     return fileDesc;
@@ -34,7 +34,7 @@ int sys_open_file(char *filePath, int flags) {
     int fileDesc = open(filePath, flags);
     int error = errno;
     if (fileDesc < 0) {
-        printf("File open error: %s\n", strerror(error));
+        fprintf(stderr, "File open error: %s\n", strerror(error));
         exit(EXIT_FAILURE);
     }
 
@@ -45,7 +45,7 @@ void sys_write_to_file(int fileDescriptor, unsigned char *buffer, unsigned int b
     long long writtenBits = write(fileDescriptor, buffer, bitsCount);
     int error = errno;
     if (writtenBits != bitsCount) {
-        printf("Write to file error: %s\n", strerror(error));
+        fprintf(stderr, "Write to file error: %s\n", strerror(error));
         exit(EXIT_FAILURE);
     }
 }
@@ -54,7 +54,7 @@ void sys_read_from_file(int fileDescriptor, unsigned char *buffer, unsigned int 
     long long readBits = read(fileDescriptor, buffer, bitsCount);
     int error = errno;
     if (readBits != bitsCount) {
-        printf("Read from file error: %s\n", strerror(error));
+        fprintf(stderr, "Read from file error: %s\n", strerror(error));
         exit(EXIT_FAILURE);
     }
 }
