@@ -92,25 +92,25 @@ void sys_sort(char *filePath, unsigned int recordLength, unsigned int recordsCou
     assert(recordsCount != 0);
 
     int fileDesc = open_file(filePath, O_RDWR);
-    unsigned char *key = create_buffer(recordLength);
-    unsigned char *mvd = create_buffer(recordLength);
+    unsigned char *keyBuffer = create_buffer(recordLength);
+    unsigned char *movedBuffer = create_buffer(recordLength);
 
     for (int i = 1; i < recordsCount; ++i) {
         lseek(fileDesc, (i - 1) * recordLength, SEEK_SET);
-        read_from_file(fileDesc, mvd, recordLength);
-        read_from_file(fileDesc, key, recordLength);
+        read_from_file(fileDesc, movedBuffer, recordLength);
+        read_from_file(fileDesc, keyBuffer, recordLength);
 
         int j = i - 1;
-        while (mvd[0] > key[0]) {
+        while (movedBuffer[0] > keyBuffer[0]) {
             lseek(fileDesc, (j + 1) * recordLength, SEEK_SET);
-            write_to_file(fileDesc, mvd, recordLength);
+            write_to_file(fileDesc, movedBuffer, recordLength);
             j--;
             if (j < 0) { break; }
             lseek(fileDesc, j * recordLength, SEEK_SET);
-            read_from_file(fileDesc, mvd, recordLength);
+            read_from_file(fileDesc, movedBuffer, recordLength);
         }
         lseek(fileDesc, (j + 1) * recordLength, SEEK_SET);
-        write_to_file(fileDesc, key, recordLength);
+        write_to_file(fileDesc, keyBuffer, recordLength);
     }
     close(fileDesc);
 }
