@@ -1,8 +1,7 @@
 #!/bin/bash
-
-make record_handler
 RECORD_SIZES=(4 512 4096 8192)
-RECORD_COUNTS=(1000 5000)
+RECORD_COUNTS=(1000 3000)
+make record_handler > /dev/null
 
 for size in ${RECORD_SIZES[*]}
 do
