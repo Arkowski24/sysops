@@ -1,7 +1,10 @@
 CC=gcc
-CFLAGS=-c -Wall -std=c99 -O3
+CFLAGS=-c -Wall -std=c99 -O2
 
 all: record_handler
+
+test: record_handler timing_script.sh
+	bash timing_script.sh &> results.txt
 
 record_handler: record_handler.o record_handler_lib.o record_handler_sys.o
 	$(CC) record_handler.o record_handler_lib.o record_handler_sys.o -o record_handler

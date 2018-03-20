@@ -2,6 +2,7 @@
 RECORD_SIZES=(4 512 4096 8192)
 RECORD_COUNTS=(1000 3000)
 make record_handler > /dev/null
+echo "Results in seconds."
 
 for size in ${RECORD_SIZES[*]}
 do
@@ -15,16 +16,16 @@ do
         echo "Sort:"
         cp ${temp_file} ${copy}
         echo "System:"
-        time yes | ./record_handler sort ${copy} ${count} ${size} sys > /dev/null
+        time -p (yes | ./record_handler sort ${copy} ${count} ${size} sys > /dev/null)
         echo "Library:"
         cp ${temp_file} ${copy}
-        time yes | ./record_handler sort ${copy} ${count} ${size} lib > /dev/null
+        time -p (yes | ./record_handler sort ${copy} ${count} ${size} lib > /dev/null) | tr '\r\n' ' '
 
         echo "Copy:"
         echo "System:"
-        time yes | ./record_handler copy ${temp_file} ${copy} ${count} ${size} sys > /dev/null
+        time -p (yes | ./record_handler copy ${temp_file} ${copy} ${count} ${size} sys > /dev/null) | tr '\r\n' ' '
         echo "Library:"
-        time yes | ./record_handler copy ${temp_file} ${copy} ${count} ${size} lib > /dev/null
+        time -p (yes | ./record_handler copy ${temp_file} ${copy} ${count} ${size} lib > /dev/null) | tr '\r\n' ' '
 
         rm ${temp_file}
         rm ${copy}

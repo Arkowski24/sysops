@@ -1,0 +1,97 @@
+Results in seconds.
+
+Record count: 1000 Record size: 4
+Sort:
+    System:     |Library:
+     real 1.89  | real 2.19
+     user 0.52  | user 0.74
+     sys 1.35   | sys 1.41
+Copy:
+    System:     |Library:
+     real 0.01  | real 0.00
+     user 0.01  | user 0.00
+     sys 0.01   | sys 0.00
+
+Record count: 3000 Record size: 4
+Sort:
+    System:     |Library:
+     real 18.96 | real 23.17
+     user 4.63  | user 7.11
+     sys 13.28  | sys 15.42
+Copy:
+    System:     |Library:
+     real 0.03  | real 0.00
+     user 0.01  | user 0.00
+     sys 0.03   | sys 0.00
+
+Record count: 1000 Record size: 512
+Sort:
+    System:     |Library:
+     real 2.05  | real 3.86
+     user 0.51  | user 0.81
+     sys 1.51   | sys 2.97
+Copy:
+    System:     |Library:
+     real 0.01  | real 0.00
+     user 0.00  | user 0.00
+     sys 0.01   | sys 0.00
+
+Record count: 3000 Record size: 512
+Sort:
+    System:     |Library:
+     real 19.25 | real 34.44
+     user 4.78  | user 7.48
+     sys 13.84  | sys 26.75
+Copy:
+    System:     |Library:
+     real 0.03  | real 0.00
+     user 0.01  | user 0.00
+     sys 0.02   | sys 0.00
+
+Record count: 1000 Record size: 4096
+Sort:
+    System:     |Library:
+     real 2.26  | real 3.97
+     user 0.54  | user 0.89
+     sys 1.70   | sys 3.07
+Copy:
+    System:     |Library:
+     real 0.03  | real 0.01
+     user 0.00  | user 0.00
+     sys 0.01   | sys 0.00
+
+Record count: 3000 Record size: 4096
+Sort:
+    System:     |Library:
+     real 21.40 | real 40.01
+     user 4.90  | user 8.37
+     sys 16.20  | sys 30.40
+Copy:
+    System:     |Library:
+     real 0.12  | real 0.04
+     user 0.01  | user 0.01
+     sys 0.05   | sys 0.01
+
+Record count: 1000 Record size: 8192
+Sort:
+    System:     |Library:
+     real 2.64  | real 4.65
+     user 0.53  | user 0.98
+     sys 2.06   | sys 3.53
+Copy:
+    System:     |Library:
+     real 0.05  | real 0.03
+     user 0.01  | user 0.00
+     sys 0.02   | sys 0.01
+
+Record count: 3000 Record size: 8192
+Sort:
+    System:     |Library:
+     real 26.94 | real 41.74
+     user 4.92  | user 8.85
+     sys 20.02  | sys 31.71
+Copy:
+    System:     |Library:
+     real 0.17  | real 0.09
+     user 0.02  | user 0.01
+     sys 0.08   | sys 0.02
