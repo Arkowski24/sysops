@@ -95,3 +95,38 @@ Copy:
      real 0.17  | real 0.09
      user 0.02  | user 0.01
      sys 0.08   | sys 0.02
+
+Dodatkowe pomiary dla copy.
+Record count: 1000000 Record size: 4
+Copy:
+    System:     |Library:
+     real 7.77  | real 0.14
+     user 1.04  | user 0.13
+     sys 6.47   | sys 0.01
+
+Record count: 1000000 Record size: 512
+Copy:
+    System:     |Library:
+     real 9.81  | real 2.12
+     user 1.07  | user 0.24
+     sys 8.07   | sys 0.48
+
+Record count: 1000000 Record size: 4096
+Copy:
+    System:     |Library:
+     real 40.68 | real 38.70
+     user 1.38  | user 0.98
+     sys 14.61  | sys 6.15
+
+Record count: 1000000 Record size: 8192
+Copy:
+    System:     |Library:
+     real 84.21 | real 73.26
+     user 1.57  | user 1.68
+     sys 20.87  | sys 11.66
+
+Komentarz:
+Sortowanie przez wstawianie jest szybsze w implementacji opartej o funkcje systemowe. W czasie trwania algorytmu wielokrotnie zmieniany jest offset pliku, co z uwagi na niskopoziomowy charakter nie stanowi problemu dla read i write, ponieważ nie są
+buforowane.
+
+Sytuacja zmienia się dla copy. Odczyt i zapis odbywa się sekwencyjne, co sprawia, że fread i fwrite jest szybsze z uwagi na obecność wewnętrznego bufora.
