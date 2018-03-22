@@ -1,4 +1,6 @@
-#define _XOPEN_SOURCE       /* See feature_test_macros(7) */
+#define _XOPEN_SOURCE 700
+#define _USE_XOPEN 1
+
 #include <dirent.h>
 #include <stddef.h>
 #include <linux/limits.h>
@@ -12,6 +14,7 @@
 #include <assert.h>
 #include <sys/errno.h>
 #include "dir_explorer.h"
+#include <unistd.h>
 
 enum Comparison parse_sign(char c) {
     switch (c) {
