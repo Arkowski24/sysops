@@ -11,6 +11,10 @@ enum Comparison {
     GREATER, EQUAL, SMALLER
 };
 
+enum Comparison parse_sign(char c);
+
+void parse_date(char *stringDate, struct tm *time);
+
 void explore_directory(char *filePath, enum Comparison comparison, time_t time);
 
 char *get_file_permissions(mode_t mode);
@@ -20,6 +24,5 @@ void print_file(char *path, struct stat statistic);
 enum Comparison compareTimes(time_t a, time_t b);
 
 char *createNewFilePath(char *oldFilePath, char *fileName);
-
 
 #endif //SYSOPS_DIR_EXPLORER_H

@@ -11,64 +11,79 @@
 #include <sys/errno.h>
 #include "dir_explorer.h"
 
+enum Comparison parse_sign(char c) {
+    switch (c) {
+        case '>':
+            return GREATER;
+        case '=':
+            return EQUAL;
+        case '<':
+            return SMALLER;
+        default:
+            fprintf(stderr, "%s\n", "Unrecognizable sign.");
+            exit(EXIT_FAILURE);
+    }
+}
+
+void parse_date(char *stringDate, struct tm *time) {
+    if (strptime(stringDate, "%d.%m.%Y", time) == NULL) {
+        fprintf(stderr, "%s\n", "Date parsing error.");
+        exit(EXIT_FAILURE);
+    }
+}
+
 int main(int argc, char *argv[]) {
     if (argc < 4) {
-        fprintf(stderr, "Not enough arguments.\n");
+        fprintf(stderr, "%s\n", "Not enough arguments.");
         exit(EXIT_FAILURE);
     } else {
         char *directoryName = argv[1];
-        enum Comparison cmp;
+        enum Comparison cmp = parse_sign(argv[2][0]);
         struct tm readTime = {0};
-        char *modDate = argv[3];
+        parse_date(argv[3], &readTime);
 
-        if (strptime(modDate, "%d.%m.%Y", &readTime) == NULL) {
-            fprintf(stderr, "Date parsing error. \n");
-            exit(EXIT_FAILURE);
-        }
-
-        switch (argv[2][0]) {
-            case '>':
-                cmp = GREATER;
-                break;
-            case '=':
-                cmp = EQUAL;
-                break;
-            case '<':
-                cmp = SMALLER;
-                break;
-            default:
-                fprintf(stderr, "Unrecognizable sign. \n");
-                exit(EXIT_FAILURE);
-        }
         explore_directory(directoryName, cmp, mktime(&readTime));
+    }
+    return 0;
+}
+
+DIR *open_directory(char *filePath) {
+    DIR *dir = opendir(filePath);
+    int error = errno;
+    if (dir == NULL) {
+        fprintf(stderr, "%s\n", strerror(error));
+        exit(EXIT_FAILURE);
+    }
+    return dir;
+}
+
+struct dirent *read_directory(DIR *dir) {
+    struct dirent *dirEntry = readdir(dir);
+    int error = errno;
+    if (error != 0) {
+        fprintf(stderr, "%s\n", strerror(error));
+        exit(EXIT_FAILURE);
+    }
+    return dirEntry;
+}
+
+void get_stats(char *path, struct stat *fileStat) {
+    int error;
+    if (lstat(path, fileStat) < 0) {
+        error = errno;
+        fprintf(stderr, "%s\n", strerror(error));
+        exit(EXIT_FAILURE);
     }
 }
 
 void explore_directory(char *filePath, enum Comparison comparison, time_t time) {
-    int error;
-
-    DIR *dir = opendir(filePath);
-    error = errno;
-    if (dir == NULL) {
-        fprintf(stderr, strerror(error));
-        exit(EXIT_FAILURE);
-    }
-
-    struct dirent *dirEntry = readdir(dir);
-    if (dirEntry == NULL) {
-        fprintf(stderr, strerror(error));
-        exit(EXIT_FAILURE);
-    }
+    DIR *dir = open_directory(filePath);
+    struct dirent *dirEntry = read_directory(dir);
 
     while (dirEntry != NULL) {
         char *checkedPath = createNewFilePath(filePath, dirEntry->d_name);
         struct stat fileStat;
-
-        if (lstat(checkedPath, &fileStat) < 0) {
-            error = errno;
-            fprintf(stderr, "%s\n", strerror(error));
-            exit(EXIT_FAILURE);
-        }
+        get_stats(checkedPath, &fileStat);
 
         if (S_ISREG(fileStat.st_mode) != 0 && compareTimes(fileStat.st_mtime, time) == comparison) {
             print_file(checkedPath, fileStat);
@@ -78,7 +93,7 @@ void explore_directory(char *filePath, enum Comparison comparison, time_t time) 
         }
 
         free(checkedPath);
-        dirEntry = readdir(dir);
+        dirEntry = read_directory(dir);
     }
 }
 
@@ -120,7 +135,10 @@ void print_file(char *path, struct stat statistic) {
     time_t time = statistic.st_mtime;
     char *modTime = asctime(localtime(&time));
     modTime[strlen(modTime) - 1] = '\0';
-    printf("%s |%12lld | %s | %s \n", permissions, size, modTime, path);
+    char *p = calloc(PATH_MAX + 1, sizeof(char));
+    realpath(path, p);
+
+    printf("%s |%12lld | %s | %s \n", permissions, size, modTime, p);
 
     free(permissions);
 }
