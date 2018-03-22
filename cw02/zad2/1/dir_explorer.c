@@ -1,9 +1,11 @@
-#include <sys/types.h>
+#define _XOPEN_SOURCE       /* See feature_test_macros(7) */
 #include <dirent.h>
 #include <stddef.h>
+#include <linux/limits.h>
 #include <limits.h>
 #include <stdlib.h>
 #include <memory.h>
+#include <sys/types.h>
 #include <sys/stat.h>
 #include <stdio.h>
 #include <time.h>
