@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-c -Wall -std=c99 -O2
+CFLAGS=-c -Wall -std=gnu99 -O2
 
 all: dir_explorer
 
