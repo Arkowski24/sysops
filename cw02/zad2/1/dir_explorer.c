@@ -14,7 +14,6 @@
 #include <assert.h>
 #include <sys/errno.h>
 #include "dir_explorer.h"
-#include <unistd.h>
 
 enum Comparison parse_sign(char c) {
     switch (c) {
@@ -81,6 +80,16 @@ void get_stats(char *path, struct stat *fileStat) {
     }
 }
 
+char *get_absolute_path(char *relativePath) {
+    char *directoryName = calloc(PATH_MAX + 1, sizeof(char));
+    if (realpath(relativePath, directoryName) == NULL) {
+        int error = errno;
+        fprintf(stderr, "%s\n", strerror(error));
+        exit(EXIT_FAILURE);
+    }
+    return directoryName;
+}
+
 void explore_directory(char *filePath, enum Comparison comparison, time_t time) {
     DIR *dir = open_directory(filePath);
     struct dirent *dirEntry = read_directory(dir);
@@ -140,12 +149,12 @@ void print_file(char *path, struct stat statistic) {
     time_t time = statistic.st_mtime;
     char *modTime = asctime(localtime(&time));
     modTime[strlen(modTime) - 1] = '\0';
-    char *p = calloc(PATH_MAX + 1, sizeof(char));
-    realpath(path, p);
+    char *absPath = get_absolute_path(path);
 
-    printf("%s |%12lld | %s | %s \n", permissions, size, modTime, p);
+    printf("%s |%12lld | %s | %s \n", permissions, size, modTime, absPath);
 
     free(permissions);
+    free(absPath);
 }
 
 char *get_file_permissions(mode_t mode) {

@@ -25,4 +25,6 @@ enum Comparison compareTimes(time_t a, time_t b);
 
 char *createNewFilePath(char *oldFilePath, char *fileName);
 
+char *get_absolute_path(char *relativePath);
+
 #endif //SYSOPS_DIR_EXPLORER_H
