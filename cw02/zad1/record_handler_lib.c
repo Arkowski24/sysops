@@ -10,23 +10,26 @@
 #include "record_handler.h"
 
 FILE *lib_create_or_overwrite_file(char *filePath) {
-    FILE *file = fopen(filePath, "r+b");
+    FILE *file = fopen(filePath, "r+");
     int error = errno;
-    if (file == NULL && error == EEXIST) {
+    if (file != NULL) {
         char res;
         printf("File already exists. Overwrite it? (y/n) ");
         scanf("%c", &res);
         if (res == 'y' || res == 'Y') {
-            file = fopen(filePath, "w+b");
+            file = fopen(filePath, "w+");
             error = errno;
         }
+    } else{
+        file = fopen(filePath, "w+");
+        error = errno;
     }
 
     if (file == NULL) {
         fprintf(stderr, "File open error: %s\n", strerror(error));
         exit(EXIT_FAILURE);
     }
-    chmod(filePath, 644);
+
     return file;
 }
 
@@ -42,19 +45,25 @@ FILE *lib_open_file(char *filePath, char *mode) {
 }
 
 void lib_write_to_file(FILE *file, unsigned char *buffer, unsigned int bitsCount) {
-    unsigned long long writtenElements = fwrite(buffer, bitsCount, 1, file);
+    unsigned long long writtenElements = fwrite(buffer, sizeof(char), bitsCount, file);
     int error = errno;
-    if (writtenElements != 1) {
+    if (writtenElements != bitsCount && ferror(file)) {
         fprintf(stderr, "Write to file error: %s\n", strerror(error));
+        exit(EXIT_FAILURE);
+    } else if (writtenElements != bitsCount) {
+        fprintf(stderr, "Surpassed file size. \n");
         exit(EXIT_FAILURE);
     }
 }
 
 void lib_read_from_file(FILE *file, unsigned char *buffer, unsigned int bitsCount) {
-    unsigned long long readElements = fread(buffer, bitsCount, 1, file);
+    unsigned long long readElements = fread(buffer, sizeof(char), bitsCount, file);
     int error = errno;
-    if (readElements != 1) {
+    if (readElements != bitsCount && ferror(file) != 0) {
         fprintf(stderr, "Read from file error: %s\n", strerror(error));
+        exit(EXIT_FAILURE);
+    } else if (readElements != bitsCount) {
+        fprintf(stderr, "Surpassed file size. \n");
         exit(EXIT_FAILURE);
     }
 }

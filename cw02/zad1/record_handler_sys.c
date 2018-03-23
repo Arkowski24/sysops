@@ -46,8 +46,11 @@ int sys_open_file(char *filePath, int flags) {
 void sys_write_to_file(int fileDescriptor, unsigned char *buffer, unsigned int bitsCount) {
     long long writtenBits = write(fileDescriptor, buffer, bitsCount);
     int error = errno;
-    if (writtenBits != bitsCount) {
+    if (writtenBits < 0) {
         fprintf(stderr, "Write to file error: %s\n", strerror(error));
+        exit(EXIT_FAILURE);
+    } else if (writtenBits != bitsCount) {
+        fprintf(stderr, "Surpassed file size.\n");
         exit(EXIT_FAILURE);
     }
 }
@@ -55,8 +58,11 @@ void sys_write_to_file(int fileDescriptor, unsigned char *buffer, unsigned int b
 void sys_read_from_file(int fileDescriptor, unsigned char *buffer, unsigned int bitsCount) {
     long long readBits = read(fileDescriptor, buffer, bitsCount);
     int error = errno;
-    if (readBits != bitsCount) {
+    if (readBits < 0) {
         fprintf(stderr, "Read from file error: %s\n", strerror(error));
+        exit(EXIT_FAILURE);
+    } else if(readBits != bitsCount){
+        fprintf(stderr, "Surpassed file size.\n");
         exit(EXIT_FAILURE);
     }
 }
