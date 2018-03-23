@@ -54,7 +54,7 @@ void parse_date(char *stringDate, struct tm *time) {
     }
 }
 
-char *get_absolute_path(char *relativePath) {
+char *get_absolute_path(const char *relativePath) {
     char *directoryName = create_buffer(PATH_MAX + 1);
     if (realpath(relativePath, directoryName) == NULL) {
         int error = errno;
@@ -105,7 +105,7 @@ void print_file(const char *path, struct stat statistic) {
     modTime[strlen(modTime) - 1] = '\0';
     char *absPath = get_absolute_path(path);
 
-    printf("%s |%12lld | %s | %s \n", permissions, size, modTime, p);
+    printf("%s |%12lld | %s | %s \n", permissions, size, modTime, absPath);
 
     free(permissions);
     free(absPath);

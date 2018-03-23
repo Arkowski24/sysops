@@ -15,7 +15,7 @@ enum Comparison parse_sign(char c);
 
 void parse_date(char *stringDate, struct tm *time);
 
-char *get_absolute_path(char *relativePath);
+char *get_absolute_path(const char *relativePath);
 
 int discover_file(const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf);
 
