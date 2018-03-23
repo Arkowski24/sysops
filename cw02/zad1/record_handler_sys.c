@@ -13,14 +13,14 @@
 #include <sys/stat.h>
 
 int sys_create_or_overwrite_file(char *filePath) {
-    int fileDesc = open(filePath, O_CREAT | O_EXCL | O_TRUNC | O_WRONLY, S_IRWXU | S_IRGRP | S_IROTH);
+    int fileDesc = open(filePath, O_CREAT | O_EXCL | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR | S_IWGRP | S_IRGRP | S_IROTH);
     int error = errno;
     if (fileDesc < 0 && error == EEXIST) {
         char res;
         printf("File already exists. Overwrite it? (y/n) ");
         scanf("%c", &res);
         if (res == 'y' || res == 'Y') {
-            fileDesc = open(filePath, O_CREAT | O_TRUNC | O_WRONLY, S_IRWXU | S_IRGRP | S_IROTH);
+            fileDesc = open(filePath, O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR | S_IWGRP | S_IRGRP | S_IROTH);
             error = errno;
         }
     }
