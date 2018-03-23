@@ -9,6 +9,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "record_handler.h"
+#include <sys/types.h>
+#include <sys/stat.h>
 
 int sys_create_or_overwrite_file(char *filePath) {
     int fileDesc = open(filePath, O_CREAT | O_EXCL | O_TRUNC | O_WRONLY, S_IRWXU | S_IRGRP | S_IROTH);
