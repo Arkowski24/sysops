@@ -55,7 +55,7 @@ void parse_date(char *stringDate, struct tm *time) {
 }
 
 char *get_absolute_path(char *relativePath) {
-    char *directoryName = calloc(PATH_MAX + 1, sizeof(char));
+    char *directoryName = create_buffer(PATH_MAX + 1);
     if (realpath(relativePath, directoryName) == NULL) {
         int error = errno;
         fprintf(stderr, "%s\n", strerror(error));
@@ -103,16 +103,16 @@ void print_file(const char *path, struct stat statistic) {
     time_t time = statistic.st_mtime;
     char *modTime = asctime(localtime(&time));
     modTime[strlen(modTime) - 1] = '\0';
-    char *p = calloc(PATH_MAX + 1, sizeof(char));
-    realpath(path, p);
+    char *absPath = get_absolute_path(path);
 
     printf("%s |%12lld | %s | %s \n", permissions, size, modTime, p);
 
     free(permissions);
+    free(absPath);
 }
 
 char *get_file_permissions(mode_t mode) {
-    char *permissions = malloc(sizeof(char) * 10);
+    char *permissions = create_buffer(10);
 
     permissions[0] = (mode & S_IRUSR) ? 'r' : '-';
     permissions[1] = (mode & S_IWUSR) ? 'w' : '-';
@@ -140,4 +140,14 @@ char *get_file_permissions(mode_t mode) {
     permissions[9] = '\0';
 
     return permissions;
+}
+
+char *create_buffer(unsigned int count) {
+    char *buf = calloc(count, sizeof(char));
+    int error = errno;
+    if (buf == NULL) {
+        fprintf(stderr, "Memory allocation error: %s\n", strerror(error));
+        exit(EXIT_FAILURE);
+    }
+    return buf;
 }

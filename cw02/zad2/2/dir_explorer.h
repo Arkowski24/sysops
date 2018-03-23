@@ -25,4 +25,6 @@ void print_file(const char *path, struct stat statistic);
 
 char *get_file_permissions(mode_t mode);
 
+char *create_buffer(unsigned int count);
+
 #endif //SYSOPS_DIR_EXPLORER_H

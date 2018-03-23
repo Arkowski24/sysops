@@ -80,8 +80,18 @@ void get_stats(char *path, struct stat *fileStat) {
     }
 }
 
+char *create_buffer(unsigned int count) {
+    char *buf = calloc(count, sizeof(char));
+    int error = errno;
+    if (buf == NULL) {
+        fprintf(stderr, "Memory allocation error: %s\n", strerror(error));
+        exit(EXIT_FAILURE);
+    }
+    return buf;
+}
+
 char *get_absolute_path(char *relativePath) {
-    char *directoryName = calloc(PATH_MAX + 1, sizeof(char));
+    char *directoryName = create_buffer(PATH_MAX + 1);
     if (realpath(relativePath, directoryName) == NULL) {
         int error = errno;
         fprintf(stderr, "%s\n", strerror(error));
@@ -112,7 +122,7 @@ void explore_directory(char *filePath, enum Comparison comparison, time_t time) 
 }
 
 char *createNewFilePath(char *oldFilePath, char *fileName) {
-    char *checkedPath = calloc(PATH_MAX, sizeof(char));
+    char *checkedPath = create_buffer(PATH_MAX + 1);
     strcat(checkedPath, oldFilePath);
     strcat(checkedPath, "/");
     strcat(checkedPath, fileName);
@@ -158,7 +168,7 @@ void print_file(char *path, struct stat statistic) {
 }
 
 char *get_file_permissions(mode_t mode) {
-    char *permissions = malloc(sizeof(char) * 10);
+    char *permissions = create_buffer(10);
 
     permissions[0] = (mode & S_IRUSR) ? 'r' : '-';
     permissions[1] = (mode & S_IWUSR) ? 'w' : '-';

@@ -27,4 +27,6 @@ char *createNewFilePath(char *oldFilePath, char *fileName);
 
 char *get_absolute_path(char *relativePath);
 
+char *create_buffer(unsigned int count);
+
 #endif //SYSOPS_DIR_EXPLORER_H
