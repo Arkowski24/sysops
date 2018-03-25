@@ -1,21 +1,20 @@
 #define _XOPEN_SOURCE 600
 #define _USE_XOPEN 1
 
-#include <dirent.h>
-#include <stddef.h>
-//#include <linux/limits.h>
-#include <limits.h>
+#include <linux/limits.h>
 #include <stdlib.h>
 #include <memory.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <stdio.h>
 #include <time.h>
+#include <dirent.h>
 #include <assert.h>
 #include <sys/errno.h>
 #include <zconf.h>
 #include "dir_explorer.h"
-#include <unistd.h>
+#include <sys/wait.h>
+
 enum Comparison parse_sign(char c) {
     switch (c) {
         case '>':
@@ -52,7 +51,7 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-DIR *open_directory(char *filePath) {
+DIR *open_directory(const char *filePath) {
     DIR *dir = opendir(filePath);
     int error = errno;
     if (dir == NULL) {
@@ -63,10 +62,11 @@ DIR *open_directory(char *filePath) {
 }
 
 struct dirent *read_directory(DIR *dir) {
+    int errorBefore = errno;
     struct dirent *dirEntry = readdir(dir);
-    int error = errno;
-    if (error != 0) {
-        fprintf(stderr, "%s\n", strerror(error));
+    int errorAfter = errno;
+    if (dirEntry == NULL && errorBefore != errorAfter) {
+        fprintf(stderr, "%s\n", strerror(errorAfter));
         exit(EXIT_FAILURE);
     }
     return dirEntry;
@@ -91,7 +91,7 @@ char *create_buffer(unsigned int count) {
     return buf;
 }
 
-char *get_absolute_path(char *relativePath) {
+char *get_absolute_path(const char *relativePath) {
     char *directoryName = create_buffer(PATH_MAX + 1);
     if (realpath(relativePath, directoryName) == NULL) {
         int error = errno;
@@ -101,7 +101,7 @@ char *get_absolute_path(char *relativePath) {
     return directoryName;
 }
 
-void explore_directory(char *filePath, enum Comparison comparison, time_t time) {
+void explore_directory(const char *filePath, enum Comparison comparison, time_t time) {
     DIR *dir = open_directory(filePath);
     struct dirent *dirEntry = read_directory(dir);
 
@@ -115,17 +115,20 @@ void explore_directory(char *filePath, enum Comparison comparison, time_t time) 
         } else if (S_ISDIR(fileStat.st_mode) != 0 && strcmp(dirEntry->d_name, ".") != 0 &&
                    strcmp(dirEntry->d_name, "..") != 0) {
             pid_t child = fork();
-            if(child == 0) {
+            if (child == 0) {
                 explore_directory(checkedPath, comparison, time);
+            } else {
+                wait(NULL);
             }
         }
 
         free(checkedPath);
         dirEntry = read_directory(dir);
     }
+    exit(EXIT_SUCCESS);
 }
 
-char *createNewFilePath(char *oldFilePath, char *fileName) {
+char *createNewFilePath(const char *oldFilePath, char *fileName) {
     char *checkedPath = create_buffer(PATH_MAX + 1);
     strcat(checkedPath, oldFilePath);
     strcat(checkedPath, "/");
@@ -150,9 +153,8 @@ enum Comparison compareTimes(time_t a, time_t b) {
             return (daysA > daysB) ? GREATER : SMALLER;
         }
     } else {
-        return (daysA > daysB) ? GREATER : SMALLER;
+        return (yearA > yearB) ? GREATER : SMALLER;
     }
-
 }
 
 void print_file(char *path, struct stat statistic) {
