@@ -90,7 +90,7 @@ enum Comparison compareTimes(time_t a, time_t b) {
             return (daysA > daysB) ? GREATER : SMALLER;
         }
     } else {
-        return (daysA > daysB) ? GREATER : SMALLER;
+        return (yearA > yearB) ? GREATER : SMALLER;
     }
 
 }
