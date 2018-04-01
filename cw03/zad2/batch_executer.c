@@ -24,6 +24,7 @@ FILE *open_file(char *filePath) {
     int error = errno;
     if (file == NULL) {
         print_error_and_exit(error);
+        return NULL;
     } else {
         return file;
     }
@@ -85,13 +86,13 @@ int main(int argc, char *argv[]) {
 
     FILE *batchFile = open_file(argv[1]);
     char **command = fetch_command(batchFile);
-    int commandsCount = 0;
+    unsigned int commandsCount = 0;
 
     while (command != NULL) {
         commandsCount++;
         int commandResult = execute_command(command[0], command);
         if (commandResult != 0) {
-            printf("Line %i: Error %i with command: %s", commandsCount, commandResult, command[0]);
+            printf("Task %i: Program (%s) terminated with error code %i.\n", commandsCount, command[0], commandResult);
             exit(EXIT_FAILURE);
         }
         free(command);
