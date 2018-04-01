@@ -9,7 +9,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-#include <math.h>
 #include "batch_executer.h"
 
 #define MAX_ARGUMENTS_COUNT 32
@@ -35,7 +34,26 @@ FILE *open_file(char *filePath) {
     }
 }
 
-int execute_command(char *program, char *args[]) {
+void read_usage(struct rusage *usage) {
+    assert(usage != NULL);
+
+    int result = getrusage(RUSAGE_CHILDREN, usage);
+    int error = errno;
+    if (result != 0) {
+        print_error(error);
+        exit(EXIT_FAILURE);
+    }
+}
+
+void print_task_usage(unsigned int taskNumber, struct rusage *usage) {
+    assert(usage != NULL);
+
+    fprintf(stderr, "Task %u: System time: %li:%i s, User time: %li:%i s, Maximum RSS: %li kB.\n", taskNumber,
+            usage->ru_utime.tv_sec,
+            usage->ru_utime.tv_usec, usage->ru_stime.tv_sec, usage->ru_stime.tv_usec, usage->ru_maxrss);
+}
+
+int execute_command(char *program, char *args[], unsigned int taskNumber) {
     int pid = fork();
     if (pid == 0) {
         set_limit(RLIMIT_CPU, cpuTimeLimit);
@@ -45,9 +63,14 @@ int execute_command(char *program, char *args[]) {
         int error = errno;
         exit(error);
     } else {
-        int result;
-        wait(&result);
-        return result;
+        int taskResult;
+        wait(&taskResult);
+
+        struct rusage usage;
+        read_usage(&usage);
+        print_task_usage(taskNumber, &usage);
+
+        return taskResult;
     }
 }
 
@@ -108,7 +131,7 @@ void set_limit(int limitType, rlim_t resourceLimit) {
 
 int main(int argc, char *argv[]) {
     if (argc < 4) {
-        printf("%s\n", "Usage: <file name> <CPU time limit[s]> <Virtual memory limit[Mb]>");
+        printf("%s\n", "Usage: <file name> <CPU time limit[s]> <Virtual memory limit[MB]>");
         exit(EXIT_FAILURE);
     }
 
@@ -118,13 +141,13 @@ int main(int argc, char *argv[]) {
 
     FILE *batchFile = open_file(argv[1]);
     char **command = fetch_command(batchFile);
-    int commandsCount = 0;
+    unsigned int commandsCount = 0;
 
     while (command != NULL) {
         commandsCount++;
-        int commandResult = execute_command(command[0], command);
+        int commandResult = execute_command(command[0], command, commandsCount);
         if (commandResult != 0) {
-            printf("Line %i: Task (%s) terminated with error code %i.\n", commandsCount, command[0], commandResult);
+            printf("Task %i: Program (%s) terminated with error code %i.\n", commandsCount, command[0], commandResult);
             exit(EXIT_FAILURE);
         }
         free(command);

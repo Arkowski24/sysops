@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <sys/resource.h>
 
-int execute_command(char *program, char *args[]);
+int execute_command(char *program, char *args[], unsigned int taskNumber);
 
 char **fetch_command(FILE *file);
 
