@@ -147,7 +147,8 @@ int main(int argc, char *argv[]) {
         commandsCount++;
         int commandResult = execute_command(command[0], command, commandsCount);
         if (commandResult != 0) {
-            printf("Task %i: Program (%s) terminated with error code %i.\n", commandsCount, command[0], commandResult);
+            fprintf(stderr, "Task %i: Program (%s) terminated with error code %i.\n", commandsCount, command[0],
+                    commandResult);
             exit(EXIT_FAILURE);
         }
         free(command);

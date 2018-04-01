@@ -5,8 +5,6 @@
 #ifndef SYSOPS_BATCH_EXECUTER_H
 #define SYSOPS_BATCH_EXECUTER_H
 
-#endif //SYSOPS_BATCH_EXECUTER_H
-
 #include <stdio.h>
 #include <sys/resource.h>
 
@@ -17,3 +15,5 @@ char **fetch_command(FILE *file);
 void set_limit(int limitType, rlim_t resourceLimit);
 
 int main(int argc, char *argv[]);
+
+#endif //SYSOPS_BATCH_EXECUTER_H

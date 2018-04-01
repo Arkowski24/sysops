@@ -80,7 +80,7 @@ char **fetch_command(FILE *file) {
 
 int main(int argc, char *argv[]) {
     if (argc < 1) {
-        printf("%s\n", "File path required.");
+        fprintf(stderr, "%s\n", "File path required.");
         exit(EXIT_FAILURE);
     }
 
@@ -92,7 +92,8 @@ int main(int argc, char *argv[]) {
         commandsCount++;
         int commandResult = execute_command(command[0], command);
         if (commandResult != 0) {
-            printf("Task %i: Program (%s) terminated with error code %i.\n", commandsCount, command[0], commandResult);
+            fprintf(stderr, "Task %i: Program (%s) terminated with error code %i.\n", commandsCount, command[0],
+                    commandResult);
             exit(EXIT_FAILURE);
         }
         free(command);
