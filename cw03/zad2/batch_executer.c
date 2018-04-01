@@ -33,7 +33,8 @@ int execute_command(char *program, char *args[]) {
     int pid = fork();
     if (pid == 0) {
         execvp(program, args);
-        exit(EXIT_FAILURE);
+        int error = errno;
+        exit(error);
     } else {
         int result;
         wait(&result);
@@ -84,8 +85,13 @@ int main(int argc, char *argv[]) {
 
     FILE *batchFile = open_file(argv[1]);
     char **command = fetch_command(batchFile);
+    int commandsCount = 0;
+
     while (command != NULL) {
-        if (execute_command(command[0], command) != 0) {
+        commandsCount++;
+        int commandResult = execute_command(command[0], command);
+        if (commandResult != 0) {
+            printf("Line %i: Error %i with command: %s", commandsCount, commandResult, command[0]);
             exit(EXIT_FAILURE);
         }
         free(command);
