@@ -5,14 +5,21 @@
 #ifndef SYSOPS_SIGNAL_TESTER_H
 #define SYSOPS_SIGNAL_TESTER_H
 
+#define TEST_PRINT_CREATION 1
 
-void set_parent_handlers();
+#define TEST_PRINT_REQUEST 1
+
+#define TEST_PRINT_APPROVAL 1
+
+#define TEST_PRINT_RTS 1
+
+#define TEST_PRINT_CHILD_EXIT 1
 
 void kill_children();
 
 void child_work();
 
-void set_child_handlers();
+void parent_work();
 
 int main(int argc, char *argv[]);
 
