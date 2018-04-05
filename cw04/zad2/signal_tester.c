@@ -5,10 +5,8 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <unistd.h>
-#include <printf.h>
 #include <stdio.h>
-#include <time.h>
-#include <wait.h>
+#include <sys/wait.h>
 #include "signal_tester.h"
 
 size_t childrenCount = 0;
@@ -25,12 +23,17 @@ void kill_children(){
     }
 }
 
-void children_terminates(int sig){
+void child_terminates_handler(int sig){
     int result;
-    wait(&result);
-    printf("Time: %i\n", result);
+    pid_t childPID;
 
-    terminatedChildren++;
+    childPID = waitpid(-1, &result, WNOHANG);
+    while (childPID > 0){
+        terminatedChildren++;
+        printf("Child %i: terminated with exit code %i.\n", childPID, WEXITSTATUS(result));
+        childPID = waitpid(-1, &result, WNOHANG);
+    }
+
     if(terminatedChildren == childrenCount){
         exit(EXIT_SUCCESS);
     }
@@ -38,7 +41,7 @@ void children_terminates(int sig){
 
 void proceed_request_handler(int sig, siginfo_t *info, void *uncontext){
     receivedRequests++;
-    printf("Received SIGUSR1 from: %u.\n", info->si_pid);
+    printf("Child %i: received proceed request (SIGUSR1).\n", info->si_pid);
 
     if(receivedRequests > requiredRequests){
         kill(info->si_pid, SIGUSR2);
@@ -58,24 +61,54 @@ void interrupt_handler(int sig){
 }
 
 void rts_handle(int sig){
-    printf("Signal received: %i \n", sig);
+    printf("Received RTS signal: %i \n", sig);
 }
 
+
+void set_proceed_request_handler(){
+    struct sigaction proceed_request;
+    sigset_t newMask;
+    sigemptyset(&newMask);
+    sigaddset(&newMask, SIGUSR1);
+
+    proceed_request.sa_sigaction = proceed_request_handler;
+    proceed_request.sa_flags = SA_SIGINFO;
+    proceed_request.sa_mask = newMask;
+    sigaction(SIGUSR1, &proceed_request, NULL);
+}
+
+void set_child_terminates_handler(){
+    struct sigaction proceed_request;
+    sigset_t newMask;
+    sigemptyset(&newMask);
+    sigaddset(&newMask, SIGUSR1);
+
+    proceed_request.sa_handler = child_terminates_handler;
+    proceed_request.sa_flags = 0;
+    proceed_request.sa_mask = newMask;
+    sigaction(SIGCHLD, &proceed_request, NULL);
+}
+
+
 void set_parent_handlers(){
-    struct sigaction *proceed_request = calloc(1, sizeof(struct sigaction));
-    proceed_request->sa_sigaction = proceed_request_handler;
-    proceed_request->sa_flags = SA_SIGINFO;
-    sigaction(SIGUSR1, proceed_request, NULL);
+    set_proceed_request_handler();
+    set_child_terminates_handler();
 
     signal(SIGINT, interrupt_handler);
     for (int i = SIGRTMIN; i <= SIGRTMAX; ++i) {
         signal(i, rts_handle);
     }
-    signal(SIGCHLD, children_terminates);
+}
+
+pid_t create_child(){
+    pid_t childrenPID = fork();
+    if(childrenPID == 0){
+        child_work();
+    }
+    return childrenPID;
 }
 
 int main(int argc, char *argv[]) {
-    srand(time(NULL));
     if(argc < 3) {
         exit(EXIT_FAILURE);
     }
@@ -87,10 +120,8 @@ int main(int argc, char *argv[]) {
 
     set_parent_handlers();
     for (int i = 0; i < childrenCount; ++i) {
-        childrenPID[i] = fork();
-        if(childrenPID[i] == 0){
-            child_work();
-        }
+        childrenPID[i] = create_child();
+        printf("Created child with PID %i.\n", childrenPID[i]);
     }
     while (1){
         pause();

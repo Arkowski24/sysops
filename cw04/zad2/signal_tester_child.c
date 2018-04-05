@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <stdlib.h>
+#include <time.h>
 #include "signal_tester.h"
 
 volatile int canProceed = 0;
@@ -15,7 +16,9 @@ void proceed_handler(int signal) {
 
 void child_work() {
     set_child_handlers();
-    unsigned int sleepTime = (unsigned int) rand() % 11;
+    srand(time(NULL) * getpid());
+
+    int sleepTime = rand() % 11;
     int parentPID = getppid();
     sleep(sleepTime);
 
