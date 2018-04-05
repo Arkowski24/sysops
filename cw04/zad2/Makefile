@@ -3,12 +3,14 @@ CFLAGS=-c -Wall -std=gnu99 -O2
 
 all: signal_tester
 
-signal_tester: signal_tester.o signal_tester_child.o
-	$(CC) signal_tester.o signal_tester_child.o -o signal_tester
+signal_tester: signal_tester.o signal_tester_child.o signal_tester_parent.o
+	$(CC) signal_tester.o signal_tester_child.o signal_tester_parent.o -o signal_tester
 
 signal_tester.o: signal_tester.h signal_tester.c
 	$(CC) $(CFLAGS) signal_tester.c -o signal_tester.o
 
+signal_tester_parent.o: signal_tester.h signal_tester_parent.c
+	$(CC) $(CFLAGS) signal_tester_parent.c -o signal_tester_parent.o
 
 signal_tester_child.o: signal_tester.h signal_tester_child.c
 	$(CC) $(CFLAGS) signal_tester_child.c -o signal_tester_child.o
