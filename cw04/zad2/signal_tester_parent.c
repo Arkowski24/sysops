@@ -1,5 +1,5 @@
 //
-// Created by farald on 05.04.18.
+// Created by Arkadiusz Placha on 05.04.18.
 //
 
 #include <signal.h>
@@ -25,7 +25,7 @@ void child_terminates_handler(int sig) {
     childPID = waitpid(-1, &result, WNOHANG);
     while (childPID > 0) {
         terminatedChildren++;
-        if(TEST_PRINT_CHILD_EXIT) {
+        if (TEST_PRINT_CHILD_EXIT) {
             if (WIFEXITED(result)) {
                 printf("Child PID %i: terminated normally with exit code %i.\n", childPID, WEXITSTATUS(result));
             } else {
@@ -40,8 +40,8 @@ void child_terminates_handler(int sig) {
     }
 }
 
-void give_approval(pid_t processID){
-    if(TEST_PRINT_APPROVAL){
+void give_approval(pid_t processID) {
+    if (TEST_PRINT_APPROVAL) {
         printf("Child %i: approval granted.\n", processID);
     }
     kill(processID, SIGUSR1);
@@ -49,7 +49,7 @@ void give_approval(pid_t processID){
 
 void proceed_request_handler(int sig, siginfo_t *info, void *uncontext) {
     receivedRequests++;
-    if(TEST_PRINT_REQUEST) {
+    if (TEST_PRINT_REQUEST) {
         printf("Child %i: received proceed request (SIGUSR1).\n", info->si_pid);
     }
     if (receivedRequests > requestsToProceed) {
@@ -74,7 +74,7 @@ void interrupt_handler(int sig) {
 }
 
 void rts_handle(int sig) {
-    if(TEST_PRINT_RTS) {
+    if (TEST_PRINT_RTS) {
         printf("Received RTS signal: %i \n", sig);
     }
 }
@@ -105,7 +105,7 @@ void set_child_terminates_handler() {
     sigaction(SIGCHLD, &proceed_request, NULL);
 }
 
-void set_RTS_handle(){
+void set_RTS_handle() {
     struct sigaction rts_act;
     sigset_t newMask;
     sigemptyset(&newMask);
@@ -155,7 +155,7 @@ void parent_work() {
 
     for (int i = 0; i < createdChildren; ++i) {
         pid_t childPID = create_child();
-        if(TEST_PRINT_CREATION) {
+        if (TEST_PRINT_CREATION) {
             printf("Created child with PID %i.\n", childPID);
         }
     }

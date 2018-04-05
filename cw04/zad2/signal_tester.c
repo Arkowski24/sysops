@@ -13,7 +13,7 @@ extern unsigned long createdChildren;
 extern unsigned long requestsToProceed;
 
 int main(int argc, char *argv[]) {
-    if(argc < 3) {
+    if (argc < 3) {
         exit(EXIT_FAILURE);
     }
 
@@ -21,4 +21,5 @@ int main(int argc, char *argv[]) {
     requestsToProceed = strtoul(argv[2], NULL, 0);
 
     parent_work();
+    return 0;
 }

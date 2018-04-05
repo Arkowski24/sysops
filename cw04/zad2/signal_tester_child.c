@@ -1,5 +1,5 @@
 //
-// Created by farald on 04.04.18.
+// Created by Arkadiusz Placha on 04.04.18.
 //
 
 #include <unistd.h>
