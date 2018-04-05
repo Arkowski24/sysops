@@ -2,11 +2,12 @@
 // Created by Arkadiusz Placha on 02.04.2018.
 //
 
-#include <zconf.h>
 #include <sys/wait.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <unistd.h>
+#include "date_writer.h"
 
 int continueExecution = 0;
 int executorID = 0;
@@ -55,9 +56,12 @@ void set_interrupt_handler() {
 
 void set_stop_handler() {
     struct sigaction signalAction;
+    sigset_t newMask;
+    sigemptyset(&newMask);
+
     signalAction.sa_handler = stop_signal_handler;
     signalAction.sa_flags = 0;
-    signalAction.sa_mask = 0;
+    signalAction.sa_mask = newMask;
     sigaction(SIGTSTP, &signalAction, NULL);
 }
 
