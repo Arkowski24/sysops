@@ -28,7 +28,7 @@ void kill_children(){
 void children_terminates(int sig){
     int result;
     wait(&result);
-    printf("%i\n", result);
+    printf("Time: %i\n", result);
 
     terminatedChildren++;
     if(terminatedChildren == childrenCount){
@@ -37,7 +37,9 @@ void children_terminates(int sig){
 }
 
 void proceed_request_handler(int sig, siginfo_t *info, void *uncontext){
-    requiredRequests++;
+    receivedRequests++;
+    printf("Received SIGUSR1 from: %u.\n", info->si_pid);
+
     if(receivedRequests > requiredRequests){
         kill(info->si_pid, SIGUSR2);
     } else if (receivedRequests == requiredRequests){
@@ -56,14 +58,14 @@ void interrupt_handler(int sig){
 }
 
 void rts_handle(int sig){
-    printf("WoWe.\n");
+    printf("Signal received: %i \n", sig);
 }
 
 void set_parent_handlers(){
-    struct sigaction proceed_request = {0};
-    proceed_request.sa_sigaction = proceed_request_handler;
-    proceed_request.sa_flags = SA_SIGINFO | SA_NODEFER;
-    sigaction(SIGUSR1, &proceed_request, NULL);
+    struct sigaction *proceed_request = calloc(1, sizeof(struct sigaction));
+    proceed_request->sa_sigaction = proceed_request_handler;
+    proceed_request->sa_flags = SA_SIGINFO;
+    sigaction(SIGUSR1, proceed_request, NULL);
 
     signal(SIGINT, interrupt_handler);
     for (int i = SIGRTMIN; i <= SIGRTMAX; ++i) {
@@ -87,13 +89,10 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < childrenCount; ++i) {
         childrenPID[i] = fork();
         if(childrenPID[i] == 0){
-            set_child_handlers();
             child_work();
-        } else {
-            while (1) {
-                pause();
-            }
         }
     }
-
+    while (1){
+        pause();
+    }
 }

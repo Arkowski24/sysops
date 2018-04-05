@@ -14,12 +14,14 @@ void proceed_handler(int signal) {
 }
 
 void child_work() {
+    set_child_handlers();
     unsigned int sleepTime = (unsigned int) rand() % 11;
     int parentPID = getppid();
     sleep(sleepTime);
-    kill(parentPID, SIGUSR1);
-    while (!canProceed) {
-        pause();
+
+    while (canProceed == 0) {
+        kill(parentPID, SIGUSR1);
+        sleep(1);
     }
     int signalNumber = rand() % (SIGRTMAX - SIGRTMIN + 1);
     kill(parentPID, SIGRTMIN + signalNumber);
