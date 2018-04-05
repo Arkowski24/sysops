@@ -2,13 +2,13 @@
 // Created by Arkadiusz Placha on 30.03.2018.
 //
 
-#include <zconf.h>
 #include <sys/wait.h>
 #include <sys/errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <unistd.h>
 #include "batch_executer.h"
 
 #define MAX_ARGUMENTS_COUNT 32
@@ -48,7 +48,7 @@ void read_usage(struct rusage *usage) {
 void print_task_usage(unsigned int taskNumber, struct rusage *usage) {
     assert(usage != NULL);
 
-    fprintf(stderr, "Task %u: System time: %li:%i s, User time: %li:%i s, Maximum RSS: %li kB.\n", taskNumber,
+    fprintf(stderr, "Task %u: System time: %li:%li s, User time: %li:%li s, Maximum RSS: %li kB.\n", taskNumber,
             usage->ru_utime.tv_sec,
             usage->ru_utime.tv_usec, usage->ru_stime.tv_sec, usage->ru_stime.tv_usec, usage->ru_maxrss);
 }

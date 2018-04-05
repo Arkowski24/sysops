@@ -11,9 +11,9 @@
 #include <dirent.h>
 #include <assert.h>
 #include <sys/errno.h>
-#include <zconf.h>
-#include "dir_explorer.h"
 #include <sys/wait.h>
+#include <unistd.h>
+#include "dir_explorer.h"
 
 enum Comparison parse_sign(char c) {
     switch (c) {

@@ -2,13 +2,13 @@
 // Created by Arkadiusz Placha on 30.03.2018.
 //
 
-#include <zconf.h>
 #include <sys/wait.h>
 #include <sys/errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <unistd.h>
 
 #define MAX_ARGUMENTS_COUNT 32
 
