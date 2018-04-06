@@ -10,14 +10,14 @@
 #include <sys/time.h>
 #include <time.h>
 
-int continueExecution = 0;
+int continueExecution = 1;
 
 void stop_signal_handler(int signal) {
-    if (continueExecution == 0) {
+    if (continueExecution) {
         fprintf(stdout, "Oczekuje na CTRL+Z - kontynuacja albo CTR+C - zakonczenie programu.\n");
-        continueExecution = 1;
-    } else {
         continueExecution = 0;
+    } else {
+        continueExecution = 1;
     }
 }
 
@@ -51,8 +51,10 @@ int main(int argc, char *argv[]) {
     set_interrupt_handler();
     set_stop_handler();
     while (1) {
-        print_date();
-        sleep(1);
+        if(continueExecution){
+            print_date();
+            sleep(1);
+        }
     }
 
     return 0;
