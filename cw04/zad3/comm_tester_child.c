@@ -35,6 +35,10 @@ void set_handlers(int signSignal, int endSignal) {
 
 void child_work(int signSignal, int endSignal) {
     set_handlers(signSignal, endSignal);
+
+    pid_t parentPID = getppid();
+    kill(parentPID, SIGUSR2);
+
     while (1) {
         pause();
     }

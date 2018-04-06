@@ -19,11 +19,15 @@ unsigned long L = 0;
 
 unsigned long sentSignals = 0;
 unsigned long parReceivedSignals = 0;
-volatile int canSendNext = 1;
+volatile int canSendNext = 0;
 pid_t childPID;
 
 void par_sign_handler(int sig) {
     ++parReceivedSignals;
+    canSendNext = 1;
+}
+
+void par_ready_handler(int sig) {
     canSendNext = 1;
 }
 
@@ -70,11 +74,15 @@ void par_set_handlers() {
     } else {
         signal(SIGUSR1, par_sign_handler);
     }
+    signal(SIGUSR2, par_ready_handler);
     signal(SIGINT, par_end_handler);
+
 }
 
 void parent_work() {
-    sleep(4);
+    while (canSendNext == 0) {
+        pause();
+    }
     for (int i = 0; i < L; ++i) {
         par_send_msg();
     }
@@ -97,6 +105,7 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
+    par_set_handlers();
     childPID = fork();
     if (childPID == 0) {
         if (type == 3) {
@@ -105,7 +114,6 @@ int main(int argc, char *argv[]) {
             child_work(SIGUSR1, SIGUSR2);
         }
     } else {
-        par_set_handlers();
         parent_work();
     }
     return 0;
