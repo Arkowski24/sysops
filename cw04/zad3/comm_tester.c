@@ -93,7 +93,7 @@ int main(int argc, char *argv[]) {
     L = strtoul(argv[1], NULL, 0);
     type = strtoul(argv[2], NULL, 0);
     if (type > 3 || type == 0) {
-        fprintf(stderr, "%s\n", "Not enough arguments.");
+        fprintf(stderr, "%s\n", "Unknown mode.");
         exit(EXIT_FAILURE);
     }
 
