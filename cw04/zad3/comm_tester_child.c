@@ -6,13 +6,14 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h>
 #include "comm_tester.h"
 
-static int receivedSignals = 0;
+int receivedSignals = 0;
 
 void sign_handler(int sig) {
-    receivedSignals++;
-    int parentPID = getppid();
+    ++receivedSignals;
+    pid_t parentPID = getppid();
     kill(parentPID, sig);
 }
 
@@ -22,12 +23,12 @@ void end_handler(int sig) {
 }
 
 void set_handlers(int signSignal, int endSignal) {
-    sigset_t sigset;
-    sigfillset(&sigset);
-    sigdelset(&sigset, signSignal);
-    sigdelset(&sigset, endSignal);
+    sigset_t newMask;
+    sigfillset(&newMask);
+    sigdelset(&newMask, signSignal);
+    sigdelset(&newMask, endSignal);
+    sigprocmask(SIG_BLOCK, &newMask, NULL);
 
-    //sigprocmask(SIG_BLOCK, &sigset, NULL);
     signal(signSignal, sign_handler);
     signal(endSignal, end_handler);
 }

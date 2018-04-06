@@ -15,4 +15,4 @@ comm_tester_child.o: comm_tester_child.c comm_tester.h
 
 .PHONY : clean
 clean:
-	rm *.o signal_tester
+	rm *.o comm_tester
