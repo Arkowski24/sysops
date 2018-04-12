@@ -51,9 +51,11 @@ int main(int argc, char *argv[]) {
     set_interrupt_handler();
     set_stop_handler();
     while (1) {
-        if(continueExecution){
+        if (continueExecution) {
             print_date();
             sleep(1);
+        } else {
+            pause();
         }
     }
 
