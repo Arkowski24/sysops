@@ -65,7 +65,7 @@ int execute_line_of_commands(char *args[]) {
         execute_next_command(args);
     } else {
         int res;
-        while (wait(&res) < 0) {
+        while (wait(&res) > 0) {
             if (!(WIFEXITED(res) && WEXITSTATUS(res) == 0)) {
                 failed++;
             }
