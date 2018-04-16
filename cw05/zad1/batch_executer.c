@@ -2,12 +2,13 @@
 // Created by Arkadiusz Placha on 30.03.2018.
 //
 
-#include <zconf.h>
+#include <sys/wait.h>
 #include <sys/errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <unistd.h>
 
 #define MAX_ARGUMENTS_COUNT 32
 
@@ -42,7 +43,9 @@ void execute_next_command(char *args[]) {
     } else {
         args[offset] = NULL;
         int fn[2];
-        pipe(fn);
+        if (pipe(fn) < 0) {
+            print_error_and_exit(errno);
+        }
 
         int child = fork();
         if (child == 0) {
@@ -60,6 +63,10 @@ void execute_next_command(char *args[]) {
 
 int execute_line_of_commands(char *args[]) {
     int child = fork();
+    if (child < 0) {
+        print_error_and_exit(errno);
+    }
+
     int failed = 0;
     if (child == 0) {
         execute_next_command(args);

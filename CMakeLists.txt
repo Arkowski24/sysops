@@ -3,4 +3,4 @@ project(sysops)
 
 set(CMAKE_C_STANDARD 99)
 
-add_executable(dirExplorer cw04/zad3/comm_tester.c cw04/zad3/comm_tester_child.c cw04/zad3/comm_tester.h)
+add_executable(batchExec cw05/zad1/batch_executer.c cw05/zad1/batch_executer.h)
