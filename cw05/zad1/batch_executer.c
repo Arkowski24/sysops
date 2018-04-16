@@ -3,7 +3,6 @@
 //
 
 #include <zconf.h>
-#include <sys/wait.h>
 #include <sys/errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,17 +29,49 @@ FILE *open_file(char *filePath) {
     }
 }
 
-int execute_command(char *program, char *args[]) {
-    int pid = fork();
-    if (pid == 0) {
-        execvp(program, args);
+void execute_next_command(char *args[]) {
+    int offset = 0;
+    while (!(args[offset] == NULL || (args[offset][0] == '|' && args[offset][1] == '\0'))) {
+        offset++;
+    }
+
+    if (args[offset] == NULL) {
+        execvp(args[0], args);
         int error = errno;
         exit(error);
     } else {
-        int result;
-        wait(&result);
-        return result;
+        args[offset] = NULL;
+        int fn[2];
+        pipe(fn);
+
+        int child = fork();
+        if (child == 0) {
+            close(fn[0]);
+            dup2(fn[1], STDOUT_FILENO);
+            execvp(args[0], args);
+            exit(EXIT_FAILURE);
+        } else {
+            close(fn[1]);
+            dup2(fn[0], STDIN_FILENO);
+            execute_next_command(args + offset + 1);
+        }
     }
+}
+
+int execute_line_of_commands(char *args[]) {
+    int child = fork();
+    int failed = 0;
+    if (child == 0) {
+        execute_next_command(args);
+    } else {
+        int res;
+        while (wait(&res) < 0) {
+            if (!(WIFEXITED(res) && WEXITSTATUS(res) == 0)) {
+                failed++;
+            }
+        }
+    }
+    return failed;
 }
 
 void delete_line_chars(char *string) {
@@ -54,7 +85,7 @@ void delete_line_chars(char *string) {
     }
 }
 
-char **fetch_command(FILE *file) {
+char **fetch_commands(FILE *file) {
     assert(file != NULL);
     assert(MAX_ARGUMENTS_COUNT > 0);
 
@@ -85,19 +116,18 @@ int main(int argc, char *argv[]) {
     }
 
     FILE *batchFile = open_file(argv[1]);
-    char **command = fetch_command(batchFile);
+    char **command = fetch_commands(batchFile);
     unsigned int commandsCount = 0;
 
     while (command != NULL) {
         commandsCount++;
-        int commandResult = execute_command(command[0], command);
+        int commandResult = execute_line_of_commands(command);
         if (commandResult != 0) {
-            fprintf(stderr, "Task %i: Program (%s) terminated with error code %i.\n", commandsCount, command[0],
-                    commandResult);
+            fprintf(stderr, "Task %i: One of the programs failed.\n", commandsCount);
             exit(EXIT_FAILURE);
         }
         free(command);
-        command = fetch_command(batchFile);
+        command = fetch_commands(batchFile);
     }
 
     return 0;

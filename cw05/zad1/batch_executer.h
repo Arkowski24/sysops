@@ -7,9 +7,9 @@
 
 #include <stdio.h>
 
-int execute_command(char *program, char *args[]);
+int execute_line_of_commands(char *args[]);
 
-char **fetch_command(FILE *file);
+char **fetch_commands(FILE *file);
 
 int main(int argc, char *argv[]);
 
