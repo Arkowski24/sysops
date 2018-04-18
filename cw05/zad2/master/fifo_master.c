@@ -7,7 +7,7 @@
 #include <sys/stat.h>
 #include <sys/errno.h>
 #include <string.h>
-#include <zconf.h>
+#include <unistd.h>
 #include <fcntl.h>
 #include "fifo_master.h"
 

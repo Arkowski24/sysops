@@ -4,11 +4,12 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <zconf.h>
+#include <unistd.h>
 #include <time.h>
 #include <errno.h>
 #include <string.h>
 #include <fcntl.h>
+#include "fifo_slave.h"
 
 #define BUFFER_SIZE 256
 #define SLEEP_MIN 2
