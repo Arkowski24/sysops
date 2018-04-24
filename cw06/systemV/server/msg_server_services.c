@@ -25,7 +25,7 @@ int add_new_client(pid_t clientPID, int qDesc) {
     return -1;
 }
 
-int find_desc(pid_t clientPID){
+int find_desc(pid_t clientPID) {
     for (int i = 0; i < CLIENTS_LIMIT; ++i) {
         if (clients[i] != NULL && clients[i]->cPID == clientPID) {
             return clients[i]->cQueue;
@@ -34,12 +34,14 @@ int find_desc(pid_t clientPID){
     return -1;
 }
 
-void send_pure_msg(pid_t clientPID, struct cmd_msg * msg){
+key_t readKey(char *str) { return (key_t) strtol(str, NULL, 0); }
+
+void send_pure_msg(pid_t clientPID, struct cmd_msg *msg) {
     int desc = find_desc(clientPID);
     msgsnd(desc, msg, MSG_LENGTH, IPC_NOWAIT);
 }
 
-void send_msg(pid_t clientPID, long type, char* text) {
+void send_msg(pid_t clientPID, long type, char *text) {
     struct cmd_msg msg;
     msg.mpid = getpid();
     msg.mtype = type;
@@ -50,40 +52,58 @@ void send_msg(pid_t clientPID, long type, char* text) {
 }
 
 void service_connect(pid_t clientPID, char *str) {
-    key_t clientKey = (key_t) strtol(str, NULL, 0);
+    key_t clientKey = readKey(str);
+
     int desc = msgget(clientKey, IPC_R);
-    if(desc != -1) {
-        int id = add_new_client(clientKey, desc);
-        if(id != -1) {
+    if (desc != -1) {
+        int id = add_new_client(clientPID, desc);
+        char text[STR_LENGTH];
 
-        }
+        if (id != -1) { snprintf(text, STR_LENGTH, "%d", id); }
+        else { sprintf(text, "ERROR: TOO MANY CONNECTED CLIENTS."); }
+
+        send_msg(clientPID, MSG_RESPONSE, text);
     }
-
 }
 
-void service_mirror(char *str, size_t length) {
+void service_mirror(pid_t clientPID, char *str) {
+    size_t length = strlen(str);
     for (int i = 0; i < length / 2; ++i) {
         char tmp = str[i];
         str[i] = str[length - i];
         str[length - i] = tmp;
     }
+
+    send_msg(clientPID, MSG_RESPONSE, str);
 }
 
-void service_time() {
+void service_time(pid_t clientPID) {
     time_t timeNow = time(NULL);
-    return ctime(&timeNow);
+    char *timeStr = ctime(&timeNow);
+    char text[STR_LENGTH];
+    snprintf(text, STR_LENGTH, "%s", timeStr);
+
+    send_msg(clientPID, MSG_RESPONSE, text);
 }
 
-void service_calc(char *calculations) {
+char *perform_calc(char *calculations) {
+    char *text = calloc(STR_LENGTH, sizeof(char));
     size_t length = strlen(calculations);
-    if (length < 7) { return "ERROR: Not enough arguments."; }
+
+    if (length < 7) {
+        snprintf(text, STR_LENGTH, "ERROR: Not enough arguments.");
+        return text;
+    }
 
     double A;
     double B;
     double C;
 
     int parsed = sscanf(calculations + 4, "%lf %lf", &A, &B);
-    if (parsed != 2) { return "ERROR: Bad arguments."; }
+    if (parsed != 2) {
+        snprintf(text, STR_LENGTH, "ERROR: Bad arguments.");
+        return text;
+    }
 
     calculations[3] = '\0';
 
@@ -91,13 +111,29 @@ void service_calc(char *calculations) {
     else if (strcmp(calculations, "MUL") == 0) { C = A * B; }
     else if (strcmp(calculations, "SUB") == 0) { C = A - B; }
     else if (strcmp(calculations, "DIV") == 0) { C = A / B; }
-    else { return "ERROR: Unknown command."; }
+    else {
+        snprintf(text, STR_LENGTH, "ERROR: Unknown command.");
+        return text;
+    }
 
-    char *result = calloc(MAX_NUMBER_LENGTH + 1, sizeof(char));
-    sprintf(result, "%lf", C);
-    return result;
+    snprintf(text, STR_LENGTH, "%lf", C);
+    return text;
+}
+
+void service_calc(pid_t clientPID, char *str) {
+    char *text = perform_calc(str);
+    send_msg(clientPID, MSG_RESPONSE, text);
+    free(text);
 }
 
 void service_end() {
+    
+}
 
+void service_stop(pid_t clientPID) {
+    for (int i = 0; i < CLIENTS_LIMIT; ++i) {
+        if (clients[i] != NULL && clients[i]->cPID == clientPID) {
+            free(clients[i]);
+        }
+    }
 }

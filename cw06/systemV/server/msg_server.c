@@ -32,23 +32,22 @@ void fetch_command() {
 
     switch (msg.mtype) {
         case MSG_CONNECT:
-            service_connect(msg.mtext);
-            pid_t
+            service_connect(msg.mpid, msg.mtext);
             break;
         case MSG_MIRROR:
-            service_connect();
+            service_mirror(msg.mpid, msg.mtext);
             break;
         case MSG_CALC:
-            service_connect();
+            service_calc(msg.mpid, msg.mtext);
             break;
         case MSG_TIME:
-            service_connect();
+            service_time(msg.mpid);
             break;
         case MSG_END:
-            service_connect();
+            service_end();
             break;
         case MSG_STOP:
-            service_connect();
+            service_stop(msg.mpid);
             break;
         default:
             break;

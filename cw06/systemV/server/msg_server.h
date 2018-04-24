@@ -10,14 +10,16 @@ struct client {
     int cQueue;
 };
 
-void service_mirror(char *str, size_t length);
+void service_connect(pid_t clientPID, char *str);
 
-char *service_time();
+void service_mirror(pid_t clientPID, char *str);
 
-char *service_calc(char *calculations);
+void service_time(pid_t clientPID);
 
-char *service_end();
+void service_calc(pid_t clientPID, char *str);
 
-char *service_connect();
+void service_end();
+
+void service_stop(pid_t clientPID);
 
 #endif //SYSOPS_MSG_SERVER_H

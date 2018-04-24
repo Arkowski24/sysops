@@ -11,6 +11,7 @@
 #define MSG_TIME 3
 #define MSG_END 4
 #define MSG_STOP 5
+#define MSG_RESPONSE 6
 
 #define PUBLIC_QUEUE_ID 0
 #define PRIVATE_QUEUE_ID_MIN 1
