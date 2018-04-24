@@ -11,6 +11,7 @@
 #include "../msg_service.h"
 #include "msg_server.h"
 
+extern int continueFetch;
 extern struct client *clients[CLIENTS_LIMIT];
 
 int add_new_client(pid_t clientPID, int qDesc) {
@@ -127,7 +128,7 @@ void service_calc(pid_t clientPID, char *str) {
 }
 
 void service_end() {
-    
+    continueFetch = 0;
 }
 
 void service_stop(pid_t clientPID) {

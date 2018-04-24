@@ -9,7 +9,8 @@
 #include "../msg_service.h"
 #include "msg_server.h"
 
-int publicQueueID;
+int publicQueueID = -1;
+int continueFetch = 1;
 struct client *clients[CLIENTS_LIMIT] = {0};
 
 void print_error_and_exit(int errorNumber) {
@@ -28,7 +29,15 @@ void create_queue() {
 void fetch_command() {
     struct cmd_msg msg;
     memset(&msg, 0, sizeof(struct cmd_msg));
-    if (msgrcv(publicQueueID, &msg, MSG_LENGTH, 0, 0) == -1) { print_error_and_exit(errno); }
+    if (continueFetch) {
+        if (msgrcv(publicQueueID, &msg, MSG_LENGTH, 0, 0) == -1) { print_error_and_exit(errno); }
+    } else {
+        if (msgrcv(publicQueueID, &msg, MSG_LENGTH, 0, IPC_NOWAIT) == -1) {
+            int error = errno;
+            if (error == ENOMSG) { return; }
+            else { print_error_and_exit(error); }
+        }
+    }
 
     switch (msg.mtype) {
         case MSG_CONNECT:
@@ -54,6 +63,16 @@ void fetch_command() {
     }
 }
 
-int main(int argc, char *argv[]) {
+void close_queue() {
+    if (publicQueueID == -1) { return; }
+    msgctl(publicQueueID, IPC_RMID, NULL);
+}
 
+int main(int argc, char *argv[]) {
+    atexit(close_queue);
+    create_queue();
+    while (continueFetch) {
+        fetch_command();
+    }
+    return 0;
 }
