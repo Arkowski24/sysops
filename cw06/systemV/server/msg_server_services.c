@@ -46,8 +46,8 @@ void send_msg(pid_t clientPID, long type, char *text) {
     struct cmd_msg msg;
     msg.mpid = getpid();
     msg.mtype = type;
-    strncpy(msg.mtext, text, MSG_LENGTH - 1);
-    msg.mtext[MSG_LENGTH - 1] = '\0';
+    strncpy(msg.mtext, text, STR_LENGTH - 1);
+    msg.mtext[STR_LENGTH - 1] = '\0';
 
     send_pure_msg(clientPID, &msg);
 }
