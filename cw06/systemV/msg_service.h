@@ -6,6 +6,7 @@
 #ifndef SYSOPS_MSG_SERVICE_H
 #define SYSOPS_MSG_SERVICE_H
 
+#define MSG_UNKNOWN -1
 #define MSG_CONNECT 0
 #define MSG_MIRROR 1
 #define MSG_CALC 2

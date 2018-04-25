@@ -110,10 +110,10 @@ char *perform_calc(char *calculations) {
 
     calculations[3] = '\0';
 
-    if (strcmp(calculations, "ADD") == 0) { C = A + B; }
-    else if (strcmp(calculations, "MUL") == 0) { C = A * B; }
-    else if (strcmp(calculations, "SUB") == 0) { C = A - B; }
-    else if (strcmp(calculations, "DIV") == 0) { C = A / B; }
+    if (strcmp(calculations, "ADD") >= 0) { C = A + B; }
+    else if (strcmp(calculations, "MUL") >= 0) { C = A * B; }
+    else if (strcmp(calculations, "SUB") >= 0) { C = A - B; }
+    else if (strcmp(calculations, "DIV") >= 0) { C = A / B; }
     else {
         snprintf(text, STR_LENGTH, "ERROR: Unknown command.");
         return text;

@@ -57,25 +57,57 @@ void close_queue() {
     send_msg(MSG_STOP, "PROCESS ENDS.");
 }
 
+int get_type(char *text) {
+    if (strcmp(text, "MIRROR") >= 0) {
+        return MSG_MIRROR;
+    } else if (strcmp(text, "CALC") >= 0) {
+        return MSG_CALC;
+    } else if (strcmp(text, "TIME") >= 0) {
+        return MSG_TIME;
+    } else if (strcmp(text, "END") >= 0) {
+        return MSG_END;
+    } else {
+        return MSG_UNKNOWN;
+    }
+}
+
+void fetch_response() {
+    struct cmd_msg msg;
+    memset(&msg, 0, sizeof(struct cmd_msg));
+    if (msgrcv(serverQueueID, &msg, MSG_LENGTH, 0, 0) == -1) {
+        print_error_and_exit(errno);
+
+        printf("%s\n", msg.mtext);
+    }
+}
 
 void process_input() {
     char *text = NULL;
     size_t size = 0;
     if (getline(&text, &size, stdin) <= 0) { exit(EXIT_SUCCESS); }
+    int type = get_type(text);
 
-    if (strcmp(text, "MIRROR") >= 0) {
-        send_msg(MSG_MIRROR, text + 7);
-    } else if (strcmp(text, "CALC") >= 0) {
-        send_msg(MSG_CALC, text + 5);
-    } else if (strcmp(text, "TIME") >= 0) {
-        send_msg(MSG_TIME, text + 5);
-    } else if (strcmp(text, "END") >= 0) {
-        send_msg(MSG_END, text + 4);
-    } else {
-        printf("ERROR: Unknown command.");
-        return;
+    switch (type) {
+        case MSG_MIRROR:
+            send_msg(MSG_MIRROR, text + 7);
+            break;
+        case MSG_CALC:
+            send_msg(MSG_CALC, text + 5);
+            break;
+        case MSG_TIME:
+            send_msg(MSG_TIME, text + 5);
+            break;
+        case MSG_END:
+            send_msg(MSG_END, text + 4);
+            break;
+        case MSG_UNKNOWN:
+            printf("ERROR: Unknown command.");
+            break;
     }
 
+    if (type != MSG_UNKNOWN && type != MSG_END) {
+        fetch_response();
+    }
 }
 
 int main(int argc, char *argv[]) {
