@@ -1,6 +1,7 @@
 //
 // Created by Arkadiusz Placha on 22.04.2018.
 //
+#import <unistd.h>
 
 #ifndef SYSOPS_MSG_SERVICE_H
 #define SYSOPS_MSG_SERVICE_H

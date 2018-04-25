@@ -22,7 +22,7 @@ void create_queue() {
     char *home = getenv("HOME");
     key_t key = ftok(home, PUBLIC_QUEUE_ID);
 
-    publicQueueID = msgget(key, IPC_CREAT | IPC_EXCL | 0400);
+    publicQueueID = msgget(key, IPC_R | IPC_CREAT | IPC_EXCL);
     if (publicQueueID < 0) { print_error_and_exit(errno); }
 }
 
