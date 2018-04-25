@@ -41,6 +41,7 @@ key_t readKey(char *str) { return (key_t) strtol(str, NULL, 0); }
 
 void send_pure_msg(pid_t clientPID, struct cmd_msg *msg) {
     int desc = find_desc(clientPID);
+    printf("SENDING to %i, %i\n.", desc, clientPID);
     msgsnd(desc, msg, MSG_LENGTH, IPC_NOWAIT);
 }
 
@@ -110,10 +111,10 @@ char *perform_calc(char *calculations) {
 
     calculations[3] = '\0';
 
-    if (strcmp(calculations, "ADD") >= 0) { C = A + B; }
-    else if (strcmp(calculations, "MUL") >= 0) { C = A * B; }
-    else if (strcmp(calculations, "SUB") >= 0) { C = A - B; }
-    else if (strcmp(calculations, "DIV") >= 0) { C = A / B; }
+    if (strncmp(calculations, "ADD", 3) == 0) { C = A + B; }
+    else if (strncmp(calculations, "MUL", 3) == 0) { C = A * B; }
+    else if (strncmp(calculations, "SUB", 3) == 0) { C = A - B; }
+    else if (strncmp(calculations, "DIV", 3) == 0) { C = A / B; }
     else {
         snprintf(text, STR_LENGTH, "ERROR: Unknown command.");
         return text;

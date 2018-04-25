@@ -9,6 +9,7 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <fcntl.h>
+#include <signal.h>
 #include "../msg_service.h"
 #include "msg_client.h"
 
@@ -33,13 +34,14 @@ void send_msg(long type, char *text) {
 void open_public_queue() {
     char *home = getenv("HOME");
     key_t key = ftok(home, PUBLIC_QUEUE_ID);
+    if(key == -1) {print_error_and_exit(errno);}
 
     serverQueueID = msgget(key, S_IWUSR);
     if (serverQueueID < 0) { print_error_and_exit(errno); }
 }
 
 void open_queue() {
-    char *home = getenv(".");
+    char *home = getenv("HOME");
     pid_t pid = getpid();
     key_t queueKey = ftok(home, pid);
 
@@ -49,6 +51,8 @@ void open_queue() {
     char text[STR_LENGTH];
     snprintf(text, STR_LENGTH, "%i", queueKey);
     send_msg(MSG_CONNECT, text);
+
+    fetch_response();
 }
 
 void close_queue() {
@@ -58,13 +62,13 @@ void close_queue() {
 }
 
 int get_type(char *text) {
-    if (strcmp(text, "MIRROR") >= 0) {
+    if (strncmp(text, "MIRROR", 6) == 0) {
         return MSG_MIRROR;
-    } else if (strcmp(text, "CALC") >= 0) {
+    } else if (strncmp(text, "CALC", 4) == 0) {
         return MSG_CALC;
-    } else if (strcmp(text, "TIME") >= 0) {
+    } else if (strncmp(text, "TIME", 4) == 0) {
         return MSG_TIME;
-    } else if (strcmp(text, "END") >= 0) {
+    } else if (strncmp(text, "END", 3) == 0) {
         return MSG_END;
     } else {
         return MSG_UNKNOWN;
@@ -74,11 +78,9 @@ int get_type(char *text) {
 void fetch_response() {
     struct cmd_msg msg;
     memset(&msg, 0, sizeof(struct cmd_msg));
-    if (msgrcv(serverQueueID, &msg, MSG_LENGTH, 0, 0) == -1) {
-        print_error_and_exit(errno);
+    if (msgrcv(queueID, &msg, MSG_LENGTH, 0, 0) == -1) { print_error_and_exit(errno); }
 
-        printf("%s\n", msg.mtext);
-    }
+    printf("%s\n", msg.mtext);
 }
 
 void process_input() {
@@ -101,7 +103,7 @@ void process_input() {
             send_msg(MSG_END, text + 4);
             break;
         case MSG_UNKNOWN:
-            printf("ERROR: Unknown command.");
+            printf("ERROR: Unknown command.\n");
             break;
     }
 
@@ -110,7 +112,12 @@ void process_input() {
     }
 }
 
+void exit_normally(int sig) {
+    exit(EXIT_SUCCESS);
+}
+
 int main(int argc, char *argv[]) {
+    signal(SIGINT, exit_normally);
     atexit(close_queue);
     open_public_queue();
     open_queue();

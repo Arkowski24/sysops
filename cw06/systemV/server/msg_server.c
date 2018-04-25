@@ -8,6 +8,7 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <fcntl.h>
+#include <signal.h>
 #include "../msg_service.h"
 #include "msg_server.h"
 
@@ -41,7 +42,7 @@ void fetch_command() {
         }
     }
 
-    printf("Recieved msg from %i\n.", msg.mpid);
+    printf("Recieved msg %s from %i\n.", msg.mtext, msg.mpid);
 
     switch (msg.mtype) {
         case MSG_CONNECT:
@@ -72,7 +73,12 @@ void close_queue() {
     msgctl(publicQueueID, IPC_RMID, NULL);
 }
 
+void exit_normally(int sig) {
+    exit(EXIT_SUCCESS);
+}
+
 int main(int argc, char *argv[]) {
+    signal(SIGINT, exit_normally);
     atexit(close_queue);
     create_queue();
     while (continueFetch) {

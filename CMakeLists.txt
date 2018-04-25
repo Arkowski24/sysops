@@ -3,5 +3,5 @@ project(sysops)
 
 set(CMAKE_C_STANDARD 99)
 
-add_executable(fifoMaster cw05/zad2/master/fifo_master.c cw05/zad2/master/fifo_master.h)
-add_executable(fifoSlave cw05/zad2/slave/fifo_slave.c cw05/zad2/slave/fifo_slave.h)
+add_executable(msgServer cw06/systemV/msg_service.h cw06/systemV/server/msg_server.c cw06/systemV/server/msg_server_services.c cw06/systemV/server/msg_server.h)
+add_executable(msgClient cw06/systemV/msg_service.h cw06/systemV/client/msg_client.c cw06/systemV/client/msg_client.h)

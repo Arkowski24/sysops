@@ -7,4 +7,8 @@
 
 int main(int argc, char *argv[]);
 
+void send_msg(long type, char *text);
+
+void fetch_response();
+
 #endif //SYSOPS_MSG_CLIENT_H
