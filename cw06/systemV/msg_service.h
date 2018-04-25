@@ -1,7 +1,7 @@
 //
 // Created by Arkadiusz Placha on 22.04.2018.
 //
-#import <unistd.h>
+#include <unistd.h>
 
 #ifndef SYSOPS_MSG_SERVICE_H
 #define SYSOPS_MSG_SERVICE_H
@@ -14,7 +14,7 @@
 #define MSG_STOP 5
 #define MSG_RESPONSE 6
 
-#define PUBLIC_QUEUE_ID 0
+#define PUBLIC_QUEUE_ID 46
 #define PRIVATE_QUEUE_ID_MIN 1
 #define PRIVATE_QUEUE_ID_MAX 100
 #define CLIENTS_LIMIT (PRIVATE_QUEUE_ID_MAX - PRIVATE_QUEUE_ID_MIN + 1)

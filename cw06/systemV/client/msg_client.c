@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <sys/types.h>
+#include <fcntl.h>
 #include "../msg_service.h"
 #include "msg_client.h"
 
@@ -32,7 +34,7 @@ void open_public_queue() {
     char *home = getenv("HOME");
     key_t key = ftok(home, PUBLIC_QUEUE_ID);
 
-    serverQueueID = msgget(key, IPC_W);
+    serverQueueID = msgget(key, S_IWUSR);
     if (serverQueueID < 0) { print_error_and_exit(errno); }
 }
 
@@ -41,13 +43,14 @@ void open_queue() {
     pid_t pid = getpid();
     key_t queueKey = ftok(home, pid);
 
-    queueID = msgget(queueKey, IPC_R | IPC_CREAT | IPC_EXCL);
+    queueID = msgget(queueKey, S_IRWXU | IPC_CREAT | IPC_EXCL);
     if (queueID < 0) { print_error_and_exit(errno); }
 
     char text[STR_LENGTH];
     snprintf(text, STR_LENGTH, "%i", queueKey);
     send_msg(MSG_CONNECT, text);
 }
+
 void close_queue() {
     if (queueID == -1) { return; }
     msgctl(queueID, IPC_RMID, NULL);
@@ -58,21 +61,17 @@ void close_queue() {
 void process_input() {
     char *text = NULL;
     size_t size = 0;
-    if(getline(&text, &size, stdin) <= 0) { exit(EXIT_SUCCESS); }
+    if (getline(&text, &size, stdin) <= 0) { exit(EXIT_SUCCESS); }
 
-    if (strcmp(text, "MIRROR") == 0) {
+    if (strcmp(text, "MIRROR") >= 0) {
         send_msg(MSG_MIRROR, text + 7);
-    }
-    else if (strcmp(text, "CALC") == 0) {
+    } else if (strcmp(text, "CALC") >= 0) {
         send_msg(MSG_CALC, text + 5);
-    }
-    else if (strcmp(text, "TIME") == 0) {
+    } else if (strcmp(text, "TIME") >= 0) {
         send_msg(MSG_TIME, text + 5);
-    }
-    else if (strcmp(text, "END") == 0) {
+    } else if (strcmp(text, "END") >= 0) {
         send_msg(MSG_END, text + 4);
-    }
-    else {
+    } else {
         printf("ERROR: Unknown command.");
         return;
     }

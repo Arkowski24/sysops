@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/msg.h>
+#include <sys/types.h>
+#include <fcntl.h>
 #include "../msg_service.h"
 #include "msg_server.h"
 
@@ -55,7 +57,7 @@ void send_msg(pid_t clientPID, long type, char *text) {
 void service_connect(pid_t clientPID, char *str) {
     key_t clientKey = readKey(str);
 
-    int desc = msgget(clientKey, IPC_R);
+    int desc = msgget(clientKey, S_IWUSR);
     if (desc != -1) {
         int id = add_new_client(clientPID, desc);
         char text[STR_LENGTH];

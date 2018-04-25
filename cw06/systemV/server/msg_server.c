@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <sys/types.h>
+#include <fcntl.h>
 #include "../msg_service.h"
 #include "msg_server.h"
 
@@ -22,8 +24,8 @@ void create_queue() {
     char *home = getenv("HOME");
     key_t key = ftok(home, PUBLIC_QUEUE_ID);
 
-    publicQueueID = msgget(key, IPC_R | IPC_CREAT | IPC_EXCL);
-    if (publicQueueID < 0) { print_error_and_exit(errno); }
+    publicQueueID = msgget(key, S_IRWXU | IPC_CREAT | IPC_EXCL);
+    if (publicQueueID == -1) { print_error_and_exit(errno); }
 }
 
 void fetch_command() {
@@ -38,6 +40,8 @@ void fetch_command() {
             else { print_error_and_exit(error); }
         }
     }
+
+    printf("Recieved msg from %i\n.", msg.mpid);
 
     switch (msg.mtype) {
         case MSG_CONNECT:
