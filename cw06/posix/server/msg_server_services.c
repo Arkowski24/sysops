@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <sys/msg.h>
+#include <mqueue.h>
 #include <sys/types.h>
 #include <fcntl.h>
 #include "../msg_service.h"
@@ -37,12 +37,10 @@ int find_desc(pid_t clientPID) {
     return -1;
 }
 
-key_t readKey(char *str) { return (key_t) strtol(str, NULL, 0); }
-
 void send_pure_msg(pid_t clientPID, struct cmd_msg *msg) {
     int desc = find_desc(clientPID);
     printf("SENDING to %i, %i\n.", desc, clientPID);
-    msgsnd(desc, msg, MSG_LENGTH, IPC_NOWAIT);
+    mq_send(desc, (char *) msg, MSG_LENGTH, MSG_PRIORITY);
 }
 
 void send_msg(pid_t clientPID, long type, char *text) {
@@ -56,9 +54,7 @@ void send_msg(pid_t clientPID, long type, char *text) {
 }
 
 void service_connect(pid_t clientPID, char *str) {
-    key_t clientKey = readKey(str);
-
-    int desc = msgget(clientKey, S_IWUSR);
+    int desc = mq_open(str, S_IWUSR);
     if (desc != -1) {
         int id = add_new_client(clientPID, desc);
         char text[STR_LENGTH];

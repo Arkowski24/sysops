@@ -7,7 +7,7 @@
 
 struct client {
     pid_t cPID;
-    int cQueue;
+    mqd_t cQueue;
 };
 
 void service_connect(pid_t clientPID, char *str);

@@ -1,18 +1,20 @@
 //
 // Created by Arkadiusz Placha on 21.04.2018.
 //
-#include <sys/msg.h>
+
+#include <mqueue.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <fcntl.h>
 #include <signal.h>
 #include "../msg_service.h"
 #include "msg_server.h"
 
-int publicQueueID = -1;
+mqd_t publicQueueID = -1;
 int continueFetch = 1;
 struct client *clients[CLIENTS_LIMIT] = {0};
 
@@ -22,24 +24,22 @@ void print_error_and_exit(int errorNumber) {
 }
 
 void create_queue() {
-    char *home = getenv("HOME");
-    key_t key = ftok(home, PUBLIC_QUEUE_ID);
+    char *name = PUBLIC_QUEUE_NAME;
+    struct mq_attr attr;
+    attr.mq_msgsize = MSG_LENGTH;
+    attr.mq_maxmsg = MAX_MSG_IN_QUEUE;
 
-    publicQueueID = msgget(key, S_IRWXU | IPC_CREAT | IPC_EXCL);
+    publicQueueID = mq_open(name, O_RDWR | O_CREAT | O_EXCL | O_NONBLOCK, S_IRWXU, &attr);
     if (publicQueueID == -1) { print_error_and_exit(errno); }
 }
 
 void fetch_command() {
     struct cmd_msg msg;
     memset(&msg, 0, sizeof(struct cmd_msg));
-    if (continueFetch) {
-        if (msgrcv(publicQueueID, &msg, MSG_LENGTH, 0, 0) == -1) { print_error_and_exit(errno); }
-    } else {
-        if (msgrcv(publicQueueID, &msg, MSG_LENGTH, 0, IPC_NOWAIT) == -1) {
-            int error = errno;
-            if (error == ENOMSG) { return; }
-            else { print_error_and_exit(error); }
-        }
+    if (mq_receive(publicQueueID, (char *) &msg, MSG_LENGTH, NULL) == -1) {
+        int error = errno;
+        if (error == ENOMSG) { return; }
+        else { print_error_and_exit(error); }
     }
 
     printf("Recieved msg %s from %i\n.", msg.mtext, msg.mpid);
@@ -70,7 +70,13 @@ void fetch_command() {
 
 void close_queue() {
     if (publicQueueID == -1) { return; }
-    msgctl(publicQueueID, IPC_RMID, NULL);
+    for (int i = 0; i < CLIENTS_LIMIT; ++i) {
+        if (clients[i] != NULL) {
+            mq_close(clients[i]->cQueue);
+        }
+    }
+    mq_close(publicQueueID);
+    mq_unlink(PUBLIC_QUEUE_NAME);
 }
 
 void exit_normally(int sig) {
