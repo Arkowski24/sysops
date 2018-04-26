@@ -133,6 +133,7 @@ void service_end() {
 void service_stop(pid_t clientPID) {
     for (int i = 0; i < CLIENTS_LIMIT; ++i) {
         if (clients[i] != NULL && clients[i]->cPID == clientPID) {
+            mq_close(clients[i]->cQueue);
             free(clients[i]);
         }
     }

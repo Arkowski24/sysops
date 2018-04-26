@@ -68,11 +68,12 @@ void fetch_command() {
     }
 }
 
-void close_queue() {
+void close_queues_and_clients() {
     if (publicQueueID == -1) { return; }
     for (int i = 0; i < CLIENTS_LIMIT; ++i) {
         if (clients[i] != NULL) {
             mq_close(clients[i]->cQueue);
+            kill(clients[i]->cPID, SIGINT);
         }
     }
     mq_close(publicQueueID);
@@ -85,7 +86,7 @@ void exit_normally(int sig) {
 
 int main(int argc, char *argv[]) {
     signal(SIGINT, exit_normally);
-    atexit(close_queue);
+    atexit(close_queues_and_clients);
     create_queue();
     while (continueFetch) {
         fetch_command();
