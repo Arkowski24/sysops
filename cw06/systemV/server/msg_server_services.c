@@ -41,7 +41,7 @@ key_t readKey(char *str) { return (key_t) strtol(str, NULL, 0); }
 
 void send_pure_msg(pid_t clientPID, struct cmd_msg *msg) {
     int desc = find_desc(clientPID);
-    printf("SENDING to %i, %i\n.", desc, clientPID);
+    printf("Sending msg to desc %i, PID %i.\n", desc, clientPID);
     msgsnd(desc, msg, MSG_LENGTH, IPC_NOWAIT);
 }
 
@@ -75,7 +75,7 @@ void service_mirror(pid_t clientPID, char *str) {
     for (int i = 0; i < length / 2; ++i) {
         char tmp = str[i];
         str[i] = str[length - i - 1];
-        str[length - i] = tmp;
+        str[length - i - 1] = tmp;
     }
 
     send_msg(clientPID, MSG_RESPONSE, str);
