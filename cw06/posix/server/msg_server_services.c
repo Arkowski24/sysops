@@ -70,7 +70,7 @@ void service_mirror(pid_t clientPID, char *str) {
     size_t length = strlen(str);
     for (int i = 0; i < length / 2; ++i) {
         char tmp = str[i];
-        str[i] = str[length - i];
+        str[i] = str[length - i - 1];
         str[length - i] = tmp;
     }
 
