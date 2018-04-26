@@ -135,6 +135,7 @@ void service_stop(pid_t clientPID) {
         if (clients[i] != NULL && clients[i]->cPID == clientPID) {
             mq_close(clients[i]->cQueue);
             free(clients[i]);
+            clients[i] = NULL;
         }
     }
 }
