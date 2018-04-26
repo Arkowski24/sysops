@@ -2,7 +2,7 @@
 // Created by Arkadiusz Placha on 25.04.2018.
 //
 
-#include <sys/msg.h>
+#include <mqueue.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -13,8 +13,8 @@
 #include "../msg_service.h"
 #include "msg_client.h"
 
-int serverQueueID = -1;
-int queueID = -1;
+mqd_t serverQueueID = -1;
+mqd_t queueID = -1;
 
 void print_error_and_exit(int errorNumber) {
     fprintf(stderr, "%s \n", strerror(errorNumber));
@@ -28,36 +28,44 @@ void send_msg(long type, char *text) {
     strncpy(msg.mtext, text, STR_LENGTH - 1);
     msg.mtext[STR_LENGTH - 1] = '\0';
 
-    msgsnd(serverQueueID, &msg, MSG_LENGTH, IPC_NOWAIT);
+    mq_send(serverQueueID, (char *) &msg, MSG_LENGTH, MSG_PRIORITY);
 }
 
 void open_public_queue() {
-    char *home = getenv("HOME");
-    key_t key = ftok(home, PUBLIC_QUEUE_ID);
-    if(key == -1) {print_error_and_exit(errno);}
+    char *name = PUBLIC_QUEUE_NAME;
 
-    serverQueueID = msgget(key, S_IWUSR);
-    if (serverQueueID < 0) { print_error_and_exit(errno); }
+    serverQueueID = mq_open(name, O_RDWR | O_NONBLOCK);
+    if (serverQueueID == -1) { print_error_and_exit(errno); }
+}
+
+void create_name(char *str) {
+    pid_t pid = getpid();
+    snprintf(str, STR_LENGTH, "/client.%i", pid);
 }
 
 void open_queue() {
-    char *home = getenv("HOME");
-    pid_t pid = getpid();
-    key_t queueKey = ftok(home, pid);
+    char name[STR_LENGTH];
+    create_name(name);
 
-    queueID = msgget(queueKey, S_IRWXU | IPC_CREAT | IPC_EXCL);
-    if (queueID < 0) { print_error_and_exit(errno); }
+    struct mq_attr attr;
+    attr.mq_msgsize = MSG_LENGTH;
+    attr.mq_maxmsg = MAX_MSG_IN_QUEUE;
 
-    char text[STR_LENGTH];
-    snprintf(text, STR_LENGTH, "%i", queueKey);
-    send_msg(MSG_CONNECT, text);
+    serverQueueID = mq_open(name, O_RDWR | O_CREAT | O_EXCL | O_NONBLOCK, S_IRWXU, &attr);
+    if (serverQueueID == -1) { print_error_and_exit(errno); }
+
+    send_msg(MSG_CONNECT, name);
 
     fetch_response();
 }
 
 void close_queue() {
     if (queueID == -1) { return; }
-    msgctl(queueID, IPC_RMID, NULL);
+
+    char name[STR_LENGTH];
+    create_name(name);
+    mq_close(queueID);
+    mq_unlink(name);
     send_msg(MSG_STOP, "PROCESS ENDS.");
 }
 
@@ -78,7 +86,7 @@ int get_type(char *text) {
 void fetch_response() {
     struct cmd_msg msg;
     memset(&msg, 0, sizeof(struct cmd_msg));
-    if (msgrcv(queueID, &msg, MSG_LENGTH, 0, 0) == -1) { print_error_and_exit(errno); }
+    if (mq_receive(queueID, (char *) &msg, MSG_LENGTH, NULL) == -1) { print_error_and_exit(errno); }
 
     printf("%s\n", msg.mtext);
 }
@@ -102,7 +110,7 @@ void process_input() {
         case MSG_END:
             send_msg(MSG_END, text + 4);
             break;
-        case MSG_UNKNOWN:
+        default:
             printf("ERROR: Unknown command.\n");
             break;
     }
