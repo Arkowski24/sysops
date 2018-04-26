@@ -7,8 +7,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#include <sys/types.h>
-#include <fcntl.h>
 #include <signal.h>
 #include "../msg_service.h"
 #include "msg_client.h"
@@ -34,7 +32,7 @@ void send_msg(long type, char *text) {
 void open_public_queue() {
     char *name = PUBLIC_QUEUE_NAME;
 
-    serverQueueID = mq_open(name, O_RDWR | O_NONBLOCK);
+    serverQueueID = mq_open(name, O_WRONLY | O_NONBLOCK);
     if (serverQueueID == -1) { print_error_and_exit(errno); }
 }
 
@@ -51,8 +49,8 @@ void open_queue() {
     attr.mq_msgsize = MSG_LENGTH;
     attr.mq_maxmsg = MAX_MSG_IN_QUEUE;
 
-    serverQueueID = mq_open(name, O_RDWR | O_CREAT | O_EXCL | O_NONBLOCK, S_IRWXU, &attr);
-    if (serverQueueID == -1) { print_error_and_exit(errno); }
+    queueID = mq_open(name, O_RDWR | O_CREAT | O_EXCL, S_IRWXU, &attr);
+    if (queueID == -1) { print_error_and_exit(errno); }
 
     send_msg(MSG_CONNECT, name);
 

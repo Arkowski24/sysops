@@ -39,7 +39,7 @@ int find_desc(pid_t clientPID) {
 
 void send_pure_msg(pid_t clientPID, struct cmd_msg *msg) {
     int desc = find_desc(clientPID);
-    printf("SENDING to %i, %i\n.", desc, clientPID);
+    printf("Sending msg to desc %i, PID %i.\n", desc, clientPID);
     mq_send(desc, (char *) msg, MSG_LENGTH, MSG_PRIORITY);
 }
 
@@ -54,7 +54,7 @@ void send_msg(pid_t clientPID, long type, char *text) {
 }
 
 void service_connect(pid_t clientPID, char *str) {
-    int desc = mq_open(str, S_IWUSR);
+    int desc = mq_open(str, O_WRONLY);
     if (desc != -1) {
         int id = add_new_client(clientPID, desc);
         char text[STR_LENGTH];
@@ -71,7 +71,7 @@ void service_mirror(pid_t clientPID, char *str) {
     for (int i = 0; i < length / 2; ++i) {
         char tmp = str[i];
         str[i] = str[length - i - 1];
-        str[length - i] = tmp;
+        str[length - i - 1] = tmp;
     }
 
     send_msg(clientPID, MSG_RESPONSE, str);

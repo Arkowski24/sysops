@@ -21,7 +21,7 @@
 #define STR_LENGTH 256
 #define MSG_LENGTH (sizeof(long) + sizeof(pid_t) + STR_LENGTH * sizeof(char))
 #define PUBLIC_QUEUE_NAME "/msg_server.public_queue"
-#define MAX_MSG_IN_QUEUE 256
+#define MAX_MSG_IN_QUEUE 10
 #define MSG_PRIORITY 2
 
 struct cmd_msg {

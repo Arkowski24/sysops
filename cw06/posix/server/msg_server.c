@@ -29,7 +29,7 @@ void create_queue() {
     attr.mq_msgsize = MSG_LENGTH;
     attr.mq_maxmsg = MAX_MSG_IN_QUEUE;
 
-    publicQueueID = mq_open(name, O_RDWR | O_CREAT | O_EXCL | O_NONBLOCK, S_IRWXU, &attr);
+    publicQueueID = mq_open(name, O_RDWR | O_CREAT | O_EXCL, S_IRWXU, &attr);
     if (publicQueueID == -1) { print_error_and_exit(errno); }
 }
 
@@ -42,7 +42,7 @@ void fetch_command() {
         else { print_error_and_exit(error); }
     }
 
-    printf("Recieved msg %s from %i\n.", msg.mtext, msg.mpid);
+    printf("Recieved msg %s from %i.\n", msg.mtext, msg.mpid);
 
     switch (msg.mtype) {
         case MSG_CONNECT:
