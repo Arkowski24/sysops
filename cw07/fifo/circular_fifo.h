@@ -10,7 +10,7 @@
 
 typedef struct {
     pid_t PID;
-    char *sName[NAME_MAX];
+    char sName[NAME_MAX];
 } ClientInfo_t;
 
 typedef struct {
