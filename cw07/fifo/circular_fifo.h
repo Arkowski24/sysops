@@ -18,18 +18,18 @@ typedef struct {
     size_t readItr;
     size_t writeItr;
     ClientInfo_t clients[];
-} CircleFifo_t;
+} CircularFifo_t;
 
-void fifo_initalize(CircleFifo_t *fifo, size_t queueSize);
+void fifo_initialize(CircularFifo_t *fifo, size_t queueSize);
 
-int fifo_push(CircleFifo_t *fifo, ClientInfo_t elem);
+int fifo_push(CircularFifo_t *fifo, ClientInfo_t elem);
 
-ClientInfo_t *fifo_pop(CircleFifo_t *fifo);
+ClientInfo_t *fifo_pop(CircularFifo_t *fifo);
 
-ClientInfo_t *fifo_front(CircleFifo_t *fifo);
+ClientInfo_t *fifo_front(CircularFifo_t *fifo);
 
-int fifo_empty(CircleFifo_t *fifo);
+int fifo_empty(CircularFifo_t *fifo);
 
-size_t fifo_size(CircleFifo_t *fifo);
+size_t fifo_size(CircularFifo_t *fifo);
 
 #endif //SYSOPS_CIRCLE_FIFO_H
