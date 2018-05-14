@@ -9,13 +9,15 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <semaphore.h>
+#include <stddef.h>
+#include "../../fifo/circular_fifo.h"
 
 #define BARBER_QUEUE_NAME "/barber"
 #define CLIENT_READY_NAME "/client_ready"
 #define ACCESS_WR_NAME "/access_wr"
 #define BARBER_READY_NAME "/barber_ready"
 
-void *shaMemAddr;
+CircularFifo_t *fifo;
 size_t memSize;
 int continueWork = 1;
 
@@ -27,20 +29,21 @@ void sigterm_handle(int sig) {
     continueWork = 0;
 }
 
-void initialize_resources(int queueLength) {
+void initialize_resources(size_t queueLength) {
     int fd = shm_open(BARBER_QUEUE_NAME, O_RDWR | O_CREAT | O_EXCL, S_IRWXU | S_IRWXG);
-    memSize = queueLength * sizeof(ClientInfo_t);
+    memSize = offsetof(CircularFifo_t, clients) + sizeof(ClientInfo_t) * queueLength;
 
     ftruncate(fd, memSize);
-    shaMemAddr = mmap(NULL, memSize, PROT_READ, MAP_SHARED, fd, 0);
+    fifo = mmap(NULL, memSize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    fifo_initialize(fifo, queueLength);
 
-    clientReady = sem_open(CLIENT_READY_NAME, O_RDWR | O_CREAT | O_EXCL, S_IRWXU | S_IRWXG);
-    accessWaitingRoom = sem_open(ACCESS_WR_NAME, O_RDWR | O_CREAT | O_EXCL, S_IRWXU | S_IRWXG);
-    barberReady = sem_open(BARBER_READY_NAME, O_RDWR | O_CREAT | O_EXCL, S_IRWXU | S_IRWXG);
+    clientReady = sem_open(CLIENT_READY_NAME, O_RDWR | O_CREAT | O_EXCL, S_IRWXU | S_IRWXG, 0);
+    accessWaitingRoom = sem_open(ACCESS_WR_NAME, O_RDWR | O_CREAT | O_EXCL, S_IRWXU | S_IRWXG, 0);
+    barberReady = sem_open(BARBER_READY_NAME, O_RDWR | O_CREAT | O_EXCL, S_IRWXU | S_IRWXG, 0);
 }
 
 void free_resources() {
-    munmap(shaMemAddr, memSize);
+    munmap(fifo, memSize);
     shm_unlink(BARBER_QUEUE_NAME);
 
     sem_close(clientReady);
@@ -62,15 +65,21 @@ void acquire_client() {
 
 pid_t get_client() {
     sem_wait(accessWaitingRoom);
-    //getClient
+    ClientInfo_t *client = fifo_pop(fifo);
     sem_post(accessWaitingRoom);
+
+    sem_t *clientSem = sem_open(client->sName, O_WRONLY);
+    sem_post(clientSem);
+    sem_close(clientSem);
+
+    return client->PID;
 }
 
 int main(int argc, char *argv[]) {
     atexit(free_resources);
     signal(SIGTERM, sigterm_handle);
 
-    int qSize = atoi(argv[1]);
+    size_t qSize = (size_t) atoi(argv[1]);
     initialize_resources(qSize);
 
     while (continueWork) {
