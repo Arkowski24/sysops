@@ -33,7 +33,7 @@ void sigterm_handle(int sig) {
 void initialize_resources(size_t queueLength) {
     free_resources();
     int fd = shm_open(BARBER_QUEUE_NAME, O_RDWR | O_CREAT | O_EXCL, S_IRWXU | S_IRWXG);
-    memSize = offsetof(CircularFifo_t, clients) + sizeof(ClientInfo_t) * queueLength;
+    memSize = offsetof(CircularFifo_t, queue) + sizeof(ClientInfo_t) * queueLength;
 
     ftruncate(fd, memSize);
     fifo = mmap(NULL, memSize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
@@ -58,20 +58,24 @@ void free_resources() {
 }
 
 pid_t get_client() {
+    ClientInfo_t *client;
     sem_wait(accessWaitingRoom);
 
     if (sem_trywait(clientReady) == -1) {
         fifo->barberSleeping = 1;
-        printf("Barber is going to sleep.\n");
+        printf("Barber: Going to sleep.\n");
         sem_post(accessWaitingRoom);
 
         sem_wait(clientReady);
         sem_wait(accessWaitingRoom);
         fifo->barberSleeping = 0;
-        printf("Barber is waking up.\n");
-    }
+        printf("Barber: Waking up.\n");
 
-    ClientInfo_t *client = fifo_pop(fifo);
+        client = &fifo->chair;
+    } else {
+        client = fifo_pop(fifo);
+        printf("Barber: Inviting PID %d from waiting room.", client->sPid);
+    }
     sem_post(accessWaitingRoom);
 
     sem_t *clientSem = sem_open(client->sName, O_WRONLY);
@@ -90,8 +94,8 @@ int main(int argc, char *argv[]) {
 
     while (continueWork) {
         pid_t client = get_client();
-        printf("Cutting hair of %d.\n", client);
 
+        printf("Barber: Cutting hair of %d.\n", client);
         sem_post(barberReady);
     }
 

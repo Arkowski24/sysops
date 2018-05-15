@@ -31,7 +31,7 @@ ClientInfo_t clientInfo;
 
 void load_fifo() {
     int fd = shm_open(BARBER_QUEUE_NAME, O_RDWR, 0);
-    size_t firstElemSize = offsetof(CircularFifo_t, clients);
+    size_t firstElemSize = offsetof(CircularFifo_t, queue);
     fifo = mmap(NULL, firstElemSize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 
     memSize = firstElemSize + sizeof(ClientInfo_t) * fifo->qMaxSize;
@@ -69,14 +69,17 @@ void free_resources() {
 void main_task() {
     sem_wait(accessWaitingRoom);
 
-    if (fifo_size(fifo) < fifo->qMaxSize) {
+    if (fifo_size(fifo) < fifo->qMaxSize || fifo->barberSleeping == 1) {
         if (fifo->barberSleeping == 1) {
             fifo->barberSleeping = 0;
+            fifo->chair = clientInfo;
+
             printf("PID %d: Waking up the barber.\n", clientInfo.sPid);
         } else {
+            fifo_push(fifo, clientInfo);
+
             printf("PID %d: Siting in the queue.\n", clientInfo.sPid);
         }
-        fifo_push(fifo, clientInfo);
 
         sem_post(clientReady);
         sem_post(accessWaitingRoom);

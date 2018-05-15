@@ -17,8 +17,10 @@ typedef struct {
     size_t qMaxSize;
     size_t qSize;
     size_t readItr;
+
     int barberSleeping;
-    ClientInfo_t clients[];
+    ClientInfo_t chair;
+    ClientInfo_t queue[];
 } CircularFifo_t;
 
 void fifo_initialize(CircularFifo_t *fifo, size_t queueSize);

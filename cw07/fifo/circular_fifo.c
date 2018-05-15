@@ -6,8 +6,6 @@
 #include "circular_fifo.h"
 
 void fifo_initialize(CircularFifo_t *fifo, size_t queueSize) {
-    assert(queueSize > 0);
-
     fifo->qMaxSize = queueSize;
     fifo->qSize = 0;
     fifo->readItr = 0;
@@ -18,7 +16,7 @@ int fifo_push(CircularFifo_t *fifo, ClientInfo_t elem) {
     if (fifo_size(fifo) == fifo->qMaxSize) { return -1; }
 
     size_t writeItr = (fifo->readItr + fifo->qSize) % fifo->qMaxSize;
-    fifo->clients[writeItr] = elem;
+    fifo->queue[writeItr] = elem;
     fifo->qSize++;
 
     return 0;
@@ -38,7 +36,7 @@ ClientInfo_t *fifo_pop(CircularFifo_t *fifo) {
 ClientInfo_t *fifo_front(CircularFifo_t *fifo) {
     if (fifo_empty(fifo)) { return NULL; }
 
-    ClientInfo_t *elem = fifo->clients + fifo->readItr;
+    ClientInfo_t *elem = fifo->queue + fifo->readItr;
     return elem;
 }
 
