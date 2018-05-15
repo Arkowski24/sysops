@@ -90,9 +90,9 @@ int main(int argc, char *argv[]) {
 
     while (continueWork) {
         pid_t client = get_client();
+        printf("Cutting hair of %d.\n", client);
 
         sem_post(barberReady);
-        printf("Cutting hair of %d.\n", client);
     }
 
     return 0;

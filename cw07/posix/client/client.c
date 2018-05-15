@@ -71,7 +71,8 @@ void main_task() {
 
     if (fifo_size(fifo) < fifo->qMaxSize) {
         if (fifo->barberSleeping == 1) {
-            printf("PID %d: Waking barber.\n", clientInfo.sPid);
+            fifo->barberSleeping = 0;
+            printf("PID %d: Waking up the barber.\n", clientInfo.sPid);
         } else {
             printf("PID %d: Siting in the queue.\n", clientInfo.sPid);
         }
@@ -97,6 +98,7 @@ void execute_tasks(int s) {
     for (int i = 0; i < s; ++i) {
         main_task();
     }
+    exit(EXIT_SUCCESS);
 }
 
 int main(int argc, char *argv[]) {
