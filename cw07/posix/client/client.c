@@ -79,20 +79,20 @@ void main_task() {
         } else {
             fifo_push(fifo, clientInfo);
 
-            printf("PID %d: Siting in the queue.\n", clientInfo.sPid);
+            printf("PID %d: Sitting in the waiting room.\n", clientInfo.sPid);
         }
 
         sem_post(clientReady);
         sem_post(accessWaitingRoom);
 
         sem_wait(personalSem);
-        printf("PID %d: Siting in the chair.\n", clientInfo.sPid);
+        printf("PID %d: Sitting in the chair.\n", clientInfo.sPid);
 
         sem_wait(barberReady);
-        printf("PID %d: Leaving after being cut.\n", clientInfo.sPid);
+        printf("PID %d: Leaving after having hair cut.\n", clientInfo.sPid);
     } else {
         sem_post(accessWaitingRoom);
-        printf("PID %d: Leaving without cutting.\n", clientInfo.sPid);
+        printf("PID %d: Leaving because waiting room is full.\n", clientInfo.sPid);
     }
 }
 
