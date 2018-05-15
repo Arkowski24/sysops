@@ -9,15 +9,18 @@ void fifo_initialize(CircularFifo_t *fifo, size_t queueSize) {
     assert(queueSize > 0);
 
     fifo->qMaxSize = queueSize;
+    fifo->qSize = 0;
     fifo->readItr = 0;
-    fifo->writeItr = 0;
+    fifo->barberSleeping = 0;
 }
 
 int fifo_push(CircularFifo_t *fifo, ClientInfo_t elem) {
     if (fifo_size(fifo) == fifo->qMaxSize) { return -1; }
 
-    fifo->clients[fifo->writeItr] = elem;
-    fifo->writeItr = (fifo->writeItr + 1) % fifo->qMaxSize;
+    size_t writeItr = (fifo->readItr + fifo->qSize) % fifo->qMaxSize;
+    fifo->clients[writeItr] = elem;
+    fifo->qSize++;
+
     return 0;
 }
 
@@ -26,6 +29,7 @@ ClientInfo_t *fifo_pop(CircularFifo_t *fifo) {
 
     if (elem != NULL) {
         fifo->readItr = (fifo->readItr + 1) % fifo->qMaxSize;
+        fifo->qSize--;
     }
 
     return elem;
@@ -43,9 +47,5 @@ int fifo_empty(CircularFifo_t *fifo) {
 }
 
 size_t fifo_size(CircularFifo_t *fifo) {
-    if (fifo->writeItr >= fifo->readItr) {
-        return fifo->writeItr - fifo->readItr;
-    } else {
-        return fifo->qMaxSize - fifo->readItr + fifo->writeItr;
-    }
+    return fifo->qSize;
 }

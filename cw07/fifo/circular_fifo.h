@@ -9,14 +9,15 @@
 #include <limits.h>
 
 typedef struct {
-    pid_t PID;
+    pid_t sPid;
     char sName[NAME_MAX];
 } ClientInfo_t;
 
 typedef struct {
     size_t qMaxSize;
+    size_t qSize;
     size_t readItr;
-    size_t writeItr;
+    int barberSleeping;
     ClientInfo_t clients[];
 } CircularFifo_t;
 

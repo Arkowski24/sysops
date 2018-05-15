@@ -31,6 +31,7 @@ void sigterm_handle(int sig) {
 }
 
 void initialize_resources(size_t queueLength) {
+    free_resources();
     int fd = shm_open(BARBER_QUEUE_NAME, O_RDWR | O_CREAT | O_EXCL, S_IRWXU | S_IRWXG);
     memSize = offsetof(CircularFifo_t, clients) + sizeof(ClientInfo_t) * queueLength;
 
@@ -39,7 +40,7 @@ void initialize_resources(size_t queueLength) {
     fifo_initialize(fifo, queueLength);
 
     clientReady = sem_open(CLIENT_READY_NAME, O_RDWR | O_CREAT | O_EXCL, S_IRWXU | S_IRWXG, 0);
-    accessWaitingRoom = sem_open(ACCESS_WR_NAME, O_RDWR | O_CREAT | O_EXCL, S_IRWXU | S_IRWXG, 0);
+    accessWaitingRoom = sem_open(ACCESS_WR_NAME, O_RDWR | O_CREAT | O_EXCL, S_IRWXU | S_IRWXG, 1);
     barberReady = sem_open(BARBER_READY_NAME, O_RDWR | O_CREAT | O_EXCL, S_IRWXU | S_IRWXG, 0);
 }
 
@@ -56,16 +57,20 @@ void free_resources() {
     sem_unlink(BARBER_READY_NAME);
 }
 
-void acquire_client() {
-    if (sem_trywait(clientReady) == -1) {
-        printf("Barber is going to sleep.\n");
-        sem_wait(clientReady);
-        printf("Barber is waking up.\n");
-    }
-}
-
 pid_t get_client() {
     sem_wait(accessWaitingRoom);
+
+    if (sem_trywait(clientReady) == -1) {
+        fifo->barberSleeping = 1;
+        printf("Barber is going to sleep.\n");
+        sem_post(accessWaitingRoom);
+
+        sem_wait(clientReady);
+        sem_wait(accessWaitingRoom);
+        fifo->barberSleeping = 0;
+        printf("Barber is waking up.\n");
+    }
+
     ClientInfo_t *client = fifo_pop(fifo);
     sem_post(accessWaitingRoom);
 
@@ -73,7 +78,7 @@ pid_t get_client() {
     sem_post(clientSem);
     sem_close(clientSem);
 
-    return client->PID;
+    return client->sPid;
 }
 
 int main(int argc, char *argv[]) {
@@ -84,7 +89,6 @@ int main(int argc, char *argv[]) {
     initialize_resources(qSize);
 
     while (continueWork) {
-        acquire_client();
         pid_t client = get_client();
 
         sem_post(barberReady);

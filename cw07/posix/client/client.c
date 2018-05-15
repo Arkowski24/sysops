@@ -45,9 +45,6 @@ void initialize_resources() {
     clientReady = sem_open(CLIENT_READY_NAME, O_RDWR);
     accessWaitingRoom = sem_open(ACCESS_WR_NAME, O_RDWR);
     barberReady = sem_open(BARBER_READY_NAME, O_RDWR);
-
-    clientInfo.PID = getpid();
-    create_personal_semaphore();
 }
 
 void create_personal_semaphore() {
@@ -73,27 +70,30 @@ void main_task() {
     sem_wait(accessWaitingRoom);
 
     if (fifo_size(fifo) < fifo->qMaxSize) {
-        if (fifo_empty(fifo)) {
-            printf("Waking barber.\n");
+        if (fifo->barberSleeping == 1) {
+            printf("PID %d: Waking barber.\n", clientInfo.sPid);
         } else {
-            printf("Siting in the queue.\n");
+            printf("PID %d: Siting in the queue.\n", clientInfo.sPid);
         }
-
         fifo_push(fifo, clientInfo);
+
         sem_post(clientReady);
+        sem_post(accessWaitingRoom);
+
         sem_wait(personalSem);
 
-        printf("Being cut by barber.\n");
+        printf("PID %d: Being cut by barber.\n", clientInfo.sPid);
         sem_wait(barberReady);
-        printf("Barber finished.\n");
+        printf("PID %d: Barber finished.\n", clientInfo.sPid);
     } else {
-        printf("Leaving without cutting.\n");
+        sem_post(accessWaitingRoom);
+        printf("PID %d: Leaving without cutting.\n", clientInfo.sPid);
     }
-
-    sem_post(accessWaitingRoom);
 }
 
 void execute_tasks(int s) {
+    clientInfo.sPid = getpid();
+    create_personal_semaphore();
     for (int i = 0; i < s; ++i) {
         main_task();
     }
