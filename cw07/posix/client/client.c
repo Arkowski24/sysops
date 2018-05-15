@@ -30,7 +30,7 @@ sem_t *personalSem;
 ClientInfo_t clientInfo;
 
 void load_fifo() {
-    int fd = shm_open(BARBER_QUEUE_NAME, O_RDWR);
+    int fd = shm_open(BARBER_QUEUE_NAME, O_RDWR, 0);
     size_t firstElemSize = offsetof(CircularFifo_t, clients);
     fifo = mmap(NULL, firstElemSize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 

@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <semaphore.h>
 #include <stddef.h>
+#include <signal.h>
 #include "../../fifo/circular_fifo.h"
 
 #define BARBER_QUEUE_NAME "/barber"
