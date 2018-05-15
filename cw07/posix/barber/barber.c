@@ -74,7 +74,7 @@ pid_t get_client() {
         client = &fifo->chair;
     } else {
         client = fifo_pop(fifo);
-        printf("Barber: Inviting PID %d from waiting room.", client->sPid);
+        printf("Barber: Inviting %d from waiting room.\n", client->sPid);
     }
     sem_post(accessWaitingRoom);
 
@@ -95,8 +95,9 @@ int main(int argc, char *argv[]) {
     while (continueWork) {
         pid_t client = get_client();
 
-        printf("Barber: Cutting hair of %d.\n", client);
+        printf("Barber: Started cutting hair of %d.\n", client);
         sem_post(barberReady);
+        printf("Barber: Finished cutting hair of %d.\n", client);
     }
 
     return 0;

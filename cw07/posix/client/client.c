@@ -12,6 +12,7 @@
 #include <stddef.h>
 #include <unistd.h>
 #include <limits.h>
+#include <wait.h>
 #include "../../fifo/circular_fifo.h"
 
 #define BARBER_QUEUE_NAME "/barber"
@@ -85,10 +86,10 @@ void main_task() {
         sem_post(accessWaitingRoom);
 
         sem_wait(personalSem);
+        printf("PID %d: Siting in the chair.\n", clientInfo.sPid);
 
-        printf("PID %d: Being cut by barber.\n", clientInfo.sPid);
         sem_wait(barberReady);
-        printf("PID %d: Barber finished.\n", clientInfo.sPid);
+        printf("PID %d: Leaving after being cut.\n", clientInfo.sPid);
     } else {
         sem_post(accessWaitingRoom);
         printf("PID %d: Leaving without cutting.\n", clientInfo.sPid);
@@ -115,6 +116,9 @@ int main(int argc, char *argv[]) {
         if (fork() == 0) {
             execute_tasks(s);
         }
+    }
+    for (int j = 0; j < n; ++j) {
+        wait(NULL);
     }
 
     return 0;
