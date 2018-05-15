@@ -3,7 +3,5 @@ project(sysops)
 
 set(CMAKE_C_STANDARD 99)
 
-add_executable(msgServer cw06/posix/msg_service.h cw06/posix/server/msg_server.c cw06/posix/server/msg_server_services.c cw06/posix/server/msg_server.h)
-add_executable(msgClient cw06/posix/msg_service.h cw06/posix/client/msg_client.c cw06/posix/client/msg_client.h)
-target_link_libraries(msgServer rt)
-target_link_libraries(msgClient rt)
+add_executable(BARBER cw07/posix/barber/barber.c cw07/posix/barber/barber.h cw07/fifo/circular_fifo.c cw07/fifo/circular_fifo.h)
+add_executable(CLIENT cw07/posix/client/client.c cw07/posix/client/client.h cw07/fifo/circular_fifo.c cw07/fifo/circular_fifo.h)
