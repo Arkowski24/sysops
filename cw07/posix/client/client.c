@@ -44,9 +44,10 @@ void load_fifo() {
         perror("MEMORY MAP ERROR");
         exit(EXIT_FAILURE);
     }
-    munmap(fifo, firstElemSize);
 
     memSize = firstElemSize + sizeof(ClientInfo_t) * fifo->qMaxSize;
+    munmap(fifo, firstElemSize);
+
     fifo = mmap(NULL, memSize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (fifo == MAP_FAILED) {
         perror("MEMORY MAP ERROR");
@@ -79,7 +80,7 @@ void initialize_resources() {
 
 void create_personal_semaphore() {
     snprintf(clientInfo.sName, NAME_MAX, "/client.%d", getpid());
-    personalSem = sem_open(clientInfo.sName, O_RDWR | O_CREAT | O_EXCL, S_IRWXU | S_IRWXG, 0);
+    personalSem = sem_open(clientInfo.sName, O_RDWR | O_CREAT | O_EXCL, S_IRWXU | S_IRWXG | S_IRWXO, 0);
     if (personalSem == SEM_FAILED) {
         perror("SEMAPHORE ERROR (personalSem)");
         exit(EXIT_FAILURE);
