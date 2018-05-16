@@ -14,7 +14,7 @@
 #include <limits.h>
 #include <wait.h>
 #include <time.h>
-#include "../../fifo/circular_fifo.h"
+#include "../fifo/circular_fifo.h"
 
 #define BARBER_QUEUE_NAME "/barber"
 #define CLIENT_READY_NAME "/client_ready"

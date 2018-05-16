@@ -15,8 +15,8 @@ barber.o: barber/barber.h barber/barber.c
 client.o: client/client.h client/client.c
 	$(CC) $(CFLAGS) client/client.c -o client.o
 
-circular_fifo.o: ../fifo/circular_fifo.h ../fifo/circular_fifo.c
-	$(CC) $(CFLAGS) ../fifo/circular_fifo.c -o circular_fifo.o
+circular_fifo.o: fifo/circular_fifo.h fifo/circular_fifo.c
+	$(CC) $(CFLAGS) fifo/circular_fifo.c -o circular_fifo.o
 
 .PHONY: clean
 clean:
