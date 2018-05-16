@@ -11,6 +11,7 @@
 #include <semaphore.h>
 #include <stddef.h>
 #include <signal.h>
+#include <time.h>
 #include "../../fifo/circular_fifo.h"
 
 #define BARBER_QUEUE_NAME "/barber"
@@ -57,24 +58,30 @@ void free_resources() {
     sem_unlink(BARBER_READY_NAME);
 }
 
+long get_timestamp() {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return ts.tv_nsec;
+}
+
 pid_t get_client() {
     ClientInfo_t *client;
     sem_wait(accessWaitingRoom);
 
     if (sem_trywait(clientReady) == -1) {
         fifo->barberSleeping = 1;
-        printf("Barber: Going to sleep.\n");
+        printf("%ld|Barber: Going to sleep.\n", get_timestamp());
         sem_post(accessWaitingRoom);
 
         sem_wait(clientReady);
         sem_wait(accessWaitingRoom);
         fifo->barberSleeping = 0;
-        printf("Barber: Waking up.\n");
+        printf("%ld|Barber: Waking up.\n", get_timestamp());
 
         client = &fifo->chair;
     } else {
         client = fifo_pop(fifo);
-        printf("Barber: Inviting %d from waiting room.\n", client->sPid);
+        printf("%ld|Barber: Inviting %d from waiting room.\n", get_timestamp(), client->sPid);
     }
     sem_post(accessWaitingRoom);
 
@@ -95,9 +102,9 @@ int main(int argc, char *argv[]) {
     while (continueWork) {
         pid_t client = get_client();
 
-        printf("Barber: Started cutting hair of %d.\n", client);
+        printf("%ld|Barber: Started cutting hair of %d.\n", get_timestamp(), client);
         sem_post(barberReady);
-        printf("Barber: Finished cutting hair of %d.\n", client);
+        printf("%ld|Barber: Finished cutting hair of %d.\n", get_timestamp(), client);
     }
 
     return 0;

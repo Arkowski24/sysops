@@ -13,6 +13,7 @@
 #include <unistd.h>
 #include <limits.h>
 #include <wait.h>
+#include <time.h>
 #include "../../fifo/circular_fifo.h"
 
 #define BARBER_QUEUE_NAME "/barber"
@@ -67,6 +68,12 @@ void free_resources() {
     sem_close(barberReady);
 }
 
+long get_timestamp() {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return ts.tv_nsec;
+}
+
 void main_task() {
     sem_wait(accessWaitingRoom);
 
@@ -75,24 +82,24 @@ void main_task() {
             fifo->barberSleeping = 0;
             fifo->chair = clientInfo;
 
-            printf("PID %d: Waking up the barber.\n", clientInfo.sPid);
+            printf("%ld|PID %d: Waking up the barber.\n", get_timestamp(), clientInfo.sPid);
         } else {
             fifo_push(fifo, clientInfo);
 
-            printf("PID %d: Sitting in the waiting room.\n", clientInfo.sPid);
+            printf("%ld|PID %d: Sitting in the waiting room.\n", get_timestamp(), clientInfo.sPid);
         }
 
         sem_post(clientReady);
         sem_post(accessWaitingRoom);
 
         sem_wait(personalSem);
-        printf("PID %d: Sitting in the chair.\n", clientInfo.sPid);
+        printf("%ld|PID %d: Sitting in the chair.\n", get_timestamp(), clientInfo.sPid);
 
         sem_wait(barberReady);
-        printf("PID %d: Leaving after having hair cut.\n", clientInfo.sPid);
+        printf("%ld|PID %d: Leaving after having hair cut.\n", get_timestamp(), clientInfo.sPid);
     } else {
         sem_post(accessWaitingRoom);
-        printf("PID %d: Leaving because waiting room is full.\n", clientInfo.sPid);
+        printf("%ld|PID %d: Leaving because waiting room is full.\n", get_timestamp(), clientInfo.sPid);
     }
 }
 
