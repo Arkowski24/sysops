@@ -20,6 +20,7 @@
 #define CLIENT_READY_NAME "/client_ready"
 #define ACCESS_WR_NAME "/access_wr"
 #define BARBER_READY_NAME "/barber_ready"
+#define TIMESTAMP_SIZE 256
 
 CircularFifo_t *fifo;
 size_t memSize;
@@ -30,6 +31,8 @@ sem_t *barberReady;
 
 sem_t *personalSem;
 ClientInfo_t clientInfo;
+
+char timeStamp[TIMESTAMP_SIZE];
 
 void load_fifo() {
     int fd = shm_open(BARBER_QUEUE_NAME, O_RDWR, 0);
@@ -101,10 +104,11 @@ void free_resources() {
     sem_close(barberReady);
 }
 
-long get_timestamp() {
+char *get_timestamp() {
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
-    return ts.tv_nsec;
+    snprintf(timeStamp, TIMESTAMP_SIZE, "%ld %ld", ts.tv_sec, ts.tv_nsec);
+    return timeStamp;
 }
 
 void main_task() {
@@ -115,24 +119,25 @@ void main_task() {
             fifo->barberSleeping = 0;
             fifo->chair = clientInfo;
 
-            printf("%ld|PID %d: Waking up the barber.\n", get_timestamp(), clientInfo.sPid);
+            printf("%s|PID %d: Waking up the barber.\n", get_timestamp(), clientInfo.sPid);
         } else {
             fifo_push(fifo, clientInfo);
 
-            printf("%ld|PID %d: Sitting in the waiting room.\n", get_timestamp(), clientInfo.sPid);
+            printf("%s|PID %d: Sitting in the waiting room.\n", get_timestamp(), clientInfo.sPid);
         }
 
-        sem_post(clientReady);
         sem_post(accessWaitingRoom);
+        sem_post(clientReady);
 
         sem_wait(personalSem);
-        printf("%ld|PID %d: Sitting in the chair.\n", get_timestamp(), clientInfo.sPid);
+
+        printf("%s|PID %d: Sitting in the chair.\n", get_timestamp(), clientInfo.sPid);
 
         sem_wait(barberReady);
-        printf("%ld|PID %d: Leaving after having hair cut.\n", get_timestamp(), clientInfo.sPid);
+        printf("%s|PID %d: Leaving after having hair cut.\n", get_timestamp(), clientInfo.sPid);
     } else {
         sem_post(accessWaitingRoom);
-        printf("%ld|PID %d: Leaving because waiting room is full.\n", get_timestamp(), clientInfo.sPid);
+        printf("%s|PID %d: Leaving because waiting room is full.\n", get_timestamp(), clientInfo.sPid);
     }
 }
 

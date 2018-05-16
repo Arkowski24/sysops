@@ -18,6 +18,7 @@
 #define CLIENT_READY_NAME "/client_ready"
 #define ACCESS_WR_NAME "/access_wr"
 #define BARBER_READY_NAME "/barber_ready"
+#define TIMESTAMP_SIZE 256
 
 CircularFifo_t *fifo;
 size_t memSize;
@@ -26,6 +27,8 @@ int continueWork = 1;
 sem_t *clientReady;
 sem_t *accessWaitingRoom;
 sem_t *barberReady;
+
+char timeStamp[TIMESTAMP_SIZE];
 
 void sigterm_handle(int sig) {
     continueWork = 0;
@@ -87,46 +90,49 @@ void free_resources() {
     sem_unlink(BARBER_READY_NAME);
 }
 
-long get_timestamp() {
+char *get_timestamp() {
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
-    return ts.tv_nsec;
+    snprintf(timeStamp, TIMESTAMP_SIZE, "%ld %ld", ts.tv_sec, ts.tv_nsec);
+    return timeStamp;
 }
 
-pid_t use_client_semaphore(ClientInfo_t *client) {
+int use_client_semaphore(ClientInfo_t *client) {
     sem_t *clientSem = sem_open(client->sName, O_WRONLY);
-    if (clientSem != SEM_FAILED) {
-        sem_post(clientSem);
-        sem_close(clientSem);
-
-        return client->sPid;
+    if (clientSem == SEM_FAILED) {
+        perror("SEMAPHORE ERROR (client)");
+        return -1;
     }
-    perror("SEMAPHORE ERROR (client)");
-    return -1;
+    sem_post(clientSem);
+    sem_close(clientSem);
+    return 0;
 }
 
 pid_t get_client() {
     ClientInfo_t *client;
     sem_wait(accessWaitingRoom);
 
-    if (sem_trywait(clientReady) == -1) {
+    if (fifo_empty(fifo)) {
         fifo->barberSleeping = 1;
-        printf("%ld|Barber: Going to sleep.\n", get_timestamp());
+        printf("%s|Barber: Going to sleep.\n", get_timestamp());
         sem_post(accessWaitingRoom);
 
         sem_wait(clientReady);
         sem_wait(accessWaitingRoom);
         fifo->barberSleeping = 0;
-        printf("%ld|Barber: Waking up.\n", get_timestamp());
+        printf("%s|Barber: Waking up.\n", get_timestamp());
 
         client = &fifo->chair;
     } else {
+        sem_wait(clientReady);
         client = fifo_pop(fifo);
-        printf("%ld|Barber: Inviting %d from waiting room.\n", get_timestamp(), client->sPid);
-    }
-    sem_post(accessWaitingRoom);
 
-    return use_client_semaphore(client);
+        printf("%s|Barber: Inviting %d from waiting room.\n", get_timestamp(), client->sPid);
+    }
+    pid_t clientPid = use_client_semaphore(client) ? -1 : client->sPid;
+
+    sem_post(accessWaitingRoom);
+    return clientPid;
 }
 
 int main(int argc, char *argv[]) {
@@ -144,9 +150,9 @@ int main(int argc, char *argv[]) {
         pid_t client = get_client();
 
         if (client != -1) {
-            printf("%ld|Barber: Started cutting hair of %d.\n", get_timestamp(), client);
+            printf("%s|Barber: Started cutting hair of %d.\n", get_timestamp(), client);
             sem_post(barberReady);
-            printf("%ld|Barber: Finished cutting hair of %d.\n", get_timestamp(), client);
+            printf("%s|Barber: Finished cutting hair of %d.\n", get_timestamp(), client);
         }
     }
 
