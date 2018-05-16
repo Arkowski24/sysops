@@ -33,25 +33,57 @@ ClientInfo_t clientInfo;
 
 void load_fifo() {
     int fd = shm_open(BARBER_QUEUE_NAME, O_RDWR, 0);
+    if (fd == -1) {
+        perror("SHARED MEMORY ERROR");
+        exit(EXIT_FAILURE);
+    }
+
     size_t firstElemSize = offsetof(CircularFifo_t, queue);
     fifo = mmap(NULL, firstElemSize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    if (fifo == MAP_FAILED) {
+        perror("MEMORY MAP ERROR");
+        exit(EXIT_FAILURE);
+    }
+    munmap(fifo, firstElemSize);
 
     memSize = firstElemSize + sizeof(ClientInfo_t) * fifo->qMaxSize;
-    munmap(fifo, firstElemSize);
     fifo = mmap(NULL, memSize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    if (fifo == MAP_FAILED) {
+        perror("MEMORY MAP ERROR");
+        exit(EXIT_FAILURE);
+    }
+}
+
+void open_common_semaphores() {
+    clientReady = sem_open(CLIENT_READY_NAME, O_RDWR);
+    if (clientReady == SEM_FAILED) {
+        perror("SEMAPHORE ERROR (clientReady)");
+        exit(EXIT_FAILURE);
+    }
+    accessWaitingRoom = sem_open(ACCESS_WR_NAME, O_RDWR);
+    if (accessWaitingRoom == SEM_FAILED) {
+        perror("SEMAPHORE ERROR (accessWaitingRoom)");
+        exit(EXIT_FAILURE);
+    }
+    barberReady = sem_open(BARBER_READY_NAME, O_RDWR);
+    if (barberReady == SEM_FAILED) {
+        perror("SEMAPHORE ERROR (barberReady)");
+        exit(EXIT_FAILURE);
+    }
 }
 
 void initialize_resources() {
     load_fifo();
-
-    clientReady = sem_open(CLIENT_READY_NAME, O_RDWR);
-    accessWaitingRoom = sem_open(ACCESS_WR_NAME, O_RDWR);
-    barberReady = sem_open(BARBER_READY_NAME, O_RDWR);
+    open_common_semaphores();
 }
 
 void create_personal_semaphore() {
     snprintf(clientInfo.sName, NAME_MAX, "/client.%d", getpid());
     personalSem = sem_open(clientInfo.sName, O_RDWR | O_CREAT | O_EXCL, S_IRWXU | S_IRWXG, 0);
+    if (personalSem == SEM_FAILED) {
+        perror("SEMAPHORE ERROR (personalSem)");
+        exit(EXIT_FAILURE);
+    }
 }
 
 void delete_personal_semaphore() {
@@ -103,28 +135,39 @@ void main_task() {
     }
 }
 
-void execute_tasks(int s) {
+void execute_tasks(int times) {
     clientInfo.sPid = getpid();
     create_personal_semaphore();
-    for (int i = 0; i < s; ++i) {
+    for (int i = 0; i < times; ++i) {
         main_task();
     }
     exit(EXIT_SUCCESS);
 }
 
 int main(int argc, char *argv[]) {
+    if (argc < 3) {
+        printf("Usage: client_prog clientsNumber triesNumber\n");
+    }
+
     atexit(free_resources);
     initialize_resources();
 
-    int n = atoi(argv[1]);
-    int s = atoi(argv[2]);
+    int clients = atoi(argv[1]);
+    int tries = atoi(argv[2]);
 
-    for (int i = 0; i < n; ++i) {
+    if (clients < 0) {
+        printf("Wrong clients number.\n");
+    }
+    if (tries < 0) {
+        printf("Wrong tries number.\n");
+    }
+
+    for (int i = 0; i < clients; ++i) {
         if (fork() == 0) {
-            execute_tasks(s);
+            execute_tasks(tries);
         }
     }
-    for (int j = 0; j < n; ++j) {
+    for (int j = 0; j < clients; ++j) {
         wait(NULL);
     }
 
