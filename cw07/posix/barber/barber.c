@@ -32,6 +32,9 @@ char timeStamp[TIMESTAMP_SIZE];
 
 void sigterm_handle(int sig) {
     continueWork = 0;
+    if (fifo == NULL || fifo->barberSleeping) {
+        exit(EXIT_SUCCESS);
+    }
 }
 
 void open_shared_memory(size_t queueLength) {
