@@ -136,7 +136,6 @@ int use_client_semaphore(ClientInfo_t client) {
         return -1;
     }
     sem_post(clientSemID);
-    semctl(clientSemID, 0, IPC_RMID);
     return 0;
 }
 
