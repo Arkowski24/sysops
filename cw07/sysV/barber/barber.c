@@ -20,13 +20,9 @@
 #define ACCESS_READY_KEY_ID 30
 #define CLIENT_READY_KEY_ID 40
 
-#define CLIENT_READY_NAME "/client_ready"
-#define ACCESS_WR_NAME "/access_wr"
-#define BARBER_READY_NAME "/barber_ready"
 #define TIMESTAMP_SIZE 256
 
 CircularFifo_t *fifo;
-size_t memSize;
 int continueWork = 1;
 
 int fifoID;
@@ -47,7 +43,7 @@ void open_shared_memory(size_t queueLength) {
     char *home = getenv("HOME");
     key_t fifoKey = ftok(home, FIFO_KEY_ID);
 
-    memSize = offsetof(CircularFifo_t, queue) + sizeof(ClientInfo_t) * queueLength;
+    size_t memSize = offsetof(CircularFifo_t, queue) + sizeof(ClientInfo_t) * queueLength;
     fifoID = shmget(fifoKey, memSize, IPC_CREAT | IPC_EXCL | S_IRWXU);
     if (fifoID == -1) {
         perror("SHARED MEMORY ERROR");
@@ -83,12 +79,13 @@ void open_common_semaphores() {
         exit(EXIT_FAILURE);
     }
 
-    union semun num = 0;
-    semctl(clientReadyID, 0, SETVAL, num);
-    semctl(barberReadyID, 0, SETVAL, num);
+    union mySemun semaphoreNum;
+    semaphoreNum.val = 0;
+    semctl(clientReadyID, 0, SETVAL, semaphoreNum);
+    semctl(barberReadyID, 0, SETVAL, semaphoreNum);
 
-    num = 1;
-    semctl(accessWaitingRoomID, 0, SETVAL, num);
+    semaphoreNum.val = 1;
+    semctl(accessWaitingRoomID, 0, SETVAL, semaphoreNum);
 }
 
 void initialize_resources(size_t queueLength) {

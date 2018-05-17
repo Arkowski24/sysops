@@ -3,76 +3,73 @@
 //
 
 #include "client.h"
-#include <sys/mman.h>
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/sem.h>
 #include <sys/stat.h>
+#include <sys/shm.h>
 #include <fcntl.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <semaphore.h>
-#include <stddef.h>
 #include <unistd.h>
 #include <limits.h>
 #include <wait.h>
 #include <time.h>
 #include "../fifo/circular_fifo.h"
 
-#define BARBER_QUEUE_NAME "/barber"
-#define CLIENT_READY_NAME "/client_ready"
-#define ACCESS_WR_NAME "/access_wr"
-#define BARBER_READY_NAME "/barber_ready"
+#define FIFO_KEY_ID 10
+#define BARBER_KEY_ID 20
+#define ACCESS_READY_KEY_ID 30
+#define CLIENT_READY_KEY_ID 40
+
 #define TIMESTAMP_SIZE 256
 
 CircularFifo_t *fifo;
-size_t memSize;
+int fifoID;
+int clientReadyID;
+int accessWaitingRoomID;
+int barberReadyID;
+int personalSemID;
 
-sem_t *clientReady;
-sem_t *accessWaitingRoom;
-sem_t *barberReady;
-
-sem_t *personalSem;
 ClientInfo_t clientInfo;
 
 char timeStamp[TIMESTAMP_SIZE];
 
 void load_fifo() {
     char *home = getenv("HOME");
+    key_t fifoKey = ftok(home, FIFO_KEY_ID);
 
-    int fd = shm_open(BARBER_QUEUE_NAME, O_RDWR, 0);
-    if (fd == -1) {
+    fifoID = shmget(fifoKey, 0, 0);
+    if (fifoID == -1) {
         perror("SHARED MEMORY ERROR");
         exit(EXIT_FAILURE);
     }
 
-    size_t firstElemSize = offsetof(CircularFifo_t, queue);
-    fifo = mmap(NULL, firstElemSize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-    if (fifo == MAP_FAILED) {
-        perror("MEMORY MAP ERROR");
-        exit(EXIT_FAILURE);
-    }
-
-    memSize = firstElemSize + sizeof(ClientInfo_t) * fifo->qMaxSize;
-    munmap(fifo, firstElemSize);
-
-    fifo = mmap(NULL, memSize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-    if (fifo == MAP_FAILED) {
+    fifo = shmat(fifoID, NULL, 0);
+    if (fifo == (void *) -1) {
         perror("MEMORY MAP ERROR");
         exit(EXIT_FAILURE);
     }
 }
 
 void open_common_semaphores() {
-    clientReady = sem_open(CLIENT_READY_NAME, O_RDWR);
-    if (clientReady == SEM_FAILED) {
+    char *home = getenv("HOME");
+    key_t clientReadyKey = ftok(home, CLIENT_READY_KEY_ID);
+    key_t accessWaitingRoomKey = ftok(home, ACCESS_READY_KEY_ID);
+    key_t barberReadyKey = ftok(home, BARBER_KEY_ID);
+
+    clientReadyID = semget(clientReadyKey, 1, 0);
+    if (clientReadyID == -1) {
         perror("SEMAPHORE ERROR (clientReady)");
         exit(EXIT_FAILURE);
     }
-    accessWaitingRoom = sem_open(ACCESS_WR_NAME, O_RDWR);
-    if (accessWaitingRoom == SEM_FAILED) {
+    accessWaitingRoomID = semget(accessWaitingRoomKey, 1, 0);
+    if (accessWaitingRoomID == -1) {
         perror("SEMAPHORE ERROR (accessWaitingRoom)");
         exit(EXIT_FAILURE);
     }
-    barberReady = sem_open(BARBER_READY_NAME, O_RDWR);
-    if (barberReady == SEM_FAILED) {
+    barberReadyID = semget(barberReadyKey, 1, 0);
+    if (barberReadyID == -1) {
         perror("SEMAPHORE ERROR (barberReady)");
         exit(EXIT_FAILURE);
     }
@@ -84,26 +81,41 @@ void initialize_resources() {
 }
 
 void create_personal_semaphore() {
-    snprintf(clientInfo.sName, NAME_MAX, "/client.%d", getpid());
-    personalSem = sem_open(clientInfo.sName, O_RDWR | O_CREAT | O_EXCL, S_IRWXU | S_IRWXG | S_IRWXO, 0);
-    if (personalSem == SEM_FAILED) {
+    char *pwd = getenv("PWD");
+    clientInfo.sKey = ftok(pwd, getpid());
+
+    personalSemID = semget(clientInfo.sKey, 1, IPC_CREAT | IPC_EXCL | S_IRWXU);
+    if (personalSemID == -1) {
         perror("SEMAPHORE ERROR (personalSem)");
         exit(EXIT_FAILURE);
     }
-}
 
-void delete_personal_semaphore() {
-    sem_close(personalSem);
-    sem_unlink(clientInfo.sName);
+    union mySemun semNum;
+    semNum.val = 0;
+    semctl(personalSemID, 0, SETVAL, semNum);
 }
 
 void free_resources() {
-    delete_personal_semaphore();
+    semctl(personalSemID, 0, IPC_RMID);
+    shmdt(fifo);
+}
 
-    munmap(fifo, memSize);
-    sem_close(clientReady);
-    sem_close(accessWaitingRoom);
-    sem_close(barberReady);
+void sem_wait(int semID) {
+    struct sembuf buf;
+    buf.sem_num = 0;
+    buf.sem_op = -1;
+    buf.sem_flg = 0;
+
+    semop(semID, &buf, 1);
+}
+
+void sem_post(int semID) {
+    struct sembuf buf;
+    buf.sem_num = 0;
+    buf.sem_op = 1;
+    buf.sem_flg = 0;
+
+    semop(semID, &buf, 1);
 }
 
 char *get_timestamp() {
@@ -114,7 +126,7 @@ char *get_timestamp() {
 }
 
 void main_task() {
-    sem_wait(accessWaitingRoom);
+    sem_wait(accessWaitingRoomID);
 
     if (fifo_size(fifo) < fifo->qMaxSize || fifo->barberSleeping == 1) {
         if (fifo->barberSleeping == 1) {
@@ -128,17 +140,17 @@ void main_task() {
             printf("%s|PID %d: Sitting in the waiting room.\n", get_timestamp(), clientInfo.sPid);
         }
 
-        sem_post(accessWaitingRoom);
-        sem_post(clientReady);
+        sem_post(accessWaitingRoomID);
+        sem_post(clientReadyID);
 
-        sem_wait(personalSem);
+        sem_wait(personalSemID);
 
         printf("%s|PID %d: Sitting in the chair.\n", get_timestamp(), clientInfo.sPid);
 
-        sem_wait(barberReady);
+        sem_wait(barberReadyID);
         printf("%s|PID %d: Leaving after having hair cut.\n", get_timestamp(), clientInfo.sPid);
     } else {
-        sem_post(accessWaitingRoom);
+        sem_post(accessWaitingRoomID);
         printf("%s|PID %d: Leaving because waiting room is full.\n", get_timestamp(), clientInfo.sPid);
     }
 }

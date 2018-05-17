@@ -22,6 +22,11 @@ typedef struct {
     ClientInfo_t queue[];
 } CircularFifo_t;
 
+union mySemun {
+    int val;
+    unsigned short *array;
+};
+
 void fifo_initialize(CircularFifo_t *fifo, size_t queueSize);
 
 int fifo_push(CircularFifo_t *fifo, ClientInfo_t elem);
