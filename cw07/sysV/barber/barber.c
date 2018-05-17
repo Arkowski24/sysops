@@ -129,8 +129,8 @@ void sem_post(int semID) {
     semop(semID, &buf, 1);
 }
 
-int use_client_semaphore(ClientInfo_t *client) {
-    int clientSemID = semget(client->sKey, 1, 0);
+int use_client_semaphore(ClientInfo_t client) {
+    int clientSemID = semget(client.sKey, 1, 0);
     if (clientSemID == -1) {
         perror("SEMAPHORE ERROR (client)");
         return -1;
@@ -141,7 +141,7 @@ int use_client_semaphore(ClientInfo_t *client) {
 }
 
 pid_t get_client() {
-    ClientInfo_t *client;
+    ClientInfo_t client;
     sem_wait(accessWaitingRoomID);
 
     if (fifo_empty(fifo)) {
@@ -154,14 +154,14 @@ pid_t get_client() {
         fifo->barberSleeping = 0;
         printf("%s|Barber: Waking up.\n", get_timestamp());
 
-        client = &fifo->chair;
+        client = fifo->chair;
     } else {
         sem_wait(clientReadyID);
-        client = fifo_pop(fifo);
+        client = *fifo_pop(fifo);
 
-        printf("%s|Barber: Inviting %d from waiting room.\n", get_timestamp(), client->sPid);
+        printf("%s|Barber: Inviting %d from waiting room.\n", get_timestamp(), client.sPid);
     }
-    pid_t clientPid = use_client_semaphore(client) ? -1 : client->sPid;
+    pid_t clientPid = use_client_semaphore(client) ? -1 : client.sPid;
 
     sem_post(accessWaitingRoomID);
     return clientPid;
