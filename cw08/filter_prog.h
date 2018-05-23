@@ -6,6 +6,7 @@
 #define SYSOPS_FILTER_PROG_H
 
 #include <stdlib.h>
+#include <pthread.h>
 
 struct {
     unsigned int w;
@@ -18,6 +19,12 @@ struct {
     unsigned int c;
     double *flr;
 } typedef filter_img_t;
+
+struct {
+    pthread_t pthreadID;
+    unsigned int sIndex;
+    unsigned int count;
+} typedef thread_args_t;
 
 void *allocate_memory(unsigned int count, size_t size);
 
