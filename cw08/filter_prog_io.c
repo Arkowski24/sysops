@@ -4,9 +4,17 @@
 
 #include "filter_prog.h"
 #include <stdio.h>
-#include <stdlib.h>
 #include <ctype.h>
 #include <assert.h>
+
+void *allocate_memory(unsigned int count, size_t size) {
+    void *mem = calloc(count, size);
+    if (mem == NULL) {
+        perror("Allocation error.");
+        exit(EXIT_FAILURE);
+    }
+    return mem;
+}
 
 int fgets_delm(char *arr, unsigned int size, FILE *file) {
     unsigned int readChars = 0;
@@ -67,12 +75,7 @@ void read_pgma_header(pgma_img_t *pgmaImg, FILE *file) {
 
 void read_pgma_content(pgma_img_t *pgmaImg, FILE *file) {
     unsigned int imgSize = pgmaImg->w * pgmaImg->h;
-
-    pgmaImg->img = calloc(imgSize, sizeof(unsigned int));
-    if (pgmaImg->img == NULL) {
-        perror("Allocation error.");
-        exit(EXIT_FAILURE);
-    }
+    pgmaImg->img = allocate_memory(imgSize, sizeof(unsigned int));
 
     read_pgma_args(pgmaImg->img, imgSize, file);
 }
@@ -155,11 +158,7 @@ void read_filter_image(char *path, filter_img_t *filter) {
     read_filter_header(&filter->c, file);
     unsigned int flrSize = filter->c * filter->c;
 
-    filter->flr = calloc(flrSize, sizeof(double));
-    if (filter->flr == NULL) {
-        perror("Allocation error.");
-        exit(EXIT_FAILURE);
-    }
+    filter->flr = allocate_memory(flrSize, sizeof(double));
 
     read_filter_args(filter->flr, flrSize, file);
 }
