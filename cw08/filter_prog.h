@@ -14,4 +14,13 @@ struct {
     unsigned int *img;
 } typedef pgma_img_t;
 
+struct {
+    unsigned int c;
+    double *flr;
+} typedef filter_img_t;
+
 void read_pgma_image(char *path, pgma_img_t *pgma_img);
+
+void write_pgma_image(char *path, pgma_img_t *pgma_img);
+
+void read_filter_image(char *path, filter_img_t *filter);
