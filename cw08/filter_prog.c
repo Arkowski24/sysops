@@ -46,6 +46,13 @@ void *thread_routine(void *arg) {
     return NULL;
 }
 
+void start_thread(pthread_t *thread, const pthread_attr_t *attr, void *(*start_routine)(void *), void *arg) {
+    if (pthread_create(thread, attr, start_routine, arg)) {
+        perror("Thread creation error.");
+        exit(EXIT_FAILURE);
+    }
+}
+
 void dispatch_tasks(unsigned threadsCount) {
     assert(threadsCount > 0);
 
@@ -59,12 +66,12 @@ void dispatch_tasks(unsigned threadsCount) {
         threadArgs[i].sIndex = itr;
         threadArgs[i].count = elems;
 
-        pthread_create(&threadArgs[i].pthreadID, NULL, thread_routine, threadArgs + i);
+        start_thread(&threadArgs[i].pthreadID, NULL, thread_routine, threadArgs + i);
         itr += elems;
     }
     threadArgs[threadsCount - 1].sIndex = itr;
     threadArgs[threadsCount - 1].count = imgSize - itr;
-    pthread_create(&threadArgs[threadsCount - 1].pthreadID, NULL, thread_routine, threadArgs + threadsCount - 1);
+    start_thread(&threadArgs[threadsCount - 1].pthreadID, NULL, thread_routine, threadArgs + threadsCount - 1);
 
     for (int i = 0; i < threadsCount; ++i) {
         pthread_join(threadArgs[i].pthreadID, NULL);
