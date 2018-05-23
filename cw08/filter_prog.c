@@ -14,7 +14,7 @@ pgma_img_t outputImg;
 
 thread_args_t *threadArgs;
 
-unsigned int u_max(unsigned int a, unsigned int b) {
+int i_max(int a, int b) {
     return (a > b) ? a : b;
 }
 
@@ -28,14 +28,14 @@ void *thread_routine(void *arg) {
     thread_args_t *args = (thread_args_t *) arg;
 
     for (int k = args->sIndex; k < args->sIndex + args->count; ++k) {
-        unsigned int x = k % inputImg.w + 1;
-        unsigned int y = k - x * inputImg.w + 1;
+        int x = k / inputImg.w + 1;
+        int y = k % inputImg.w + 1;
 
         double s = 0;
         for (int i = 0; i < filterImg.c; ++i) {
             for (int j = 0; j < filterImg.c; ++j) {
-                unsigned int halfC = (filterImg.c + 1) / 2;
-                unsigned int inputIndex = u_max(0, x - halfC + i) * inputImg.w + u_max(0, y - halfC + j);
+                int halfC = (filterImg.c + 1) / 2;
+                int inputIndex = i_max(0, x - halfC + i) * inputImg.w + i_max(0, y - halfC + j);
 
                 s += inputImg.img[inputIndex] * filterImg.flr[i * filterImg.c + j];
             }
@@ -64,6 +64,7 @@ void dispatch_tasks(unsigned threadsCount) {
     }
     threadArgs[threadsCount - 1].sIndex = itr;
     threadArgs[threadsCount - 1].count = imgSize - itr;
+    pthread_create(&threadArgs[threadsCount - 1].pthreadID, NULL, thread_routine, threadArgs + threadsCount - 1);
 
     for (int i = 0; i < threadsCount; ++i) {
         pthread_join(threadArgs[i].pthreadID, NULL);
