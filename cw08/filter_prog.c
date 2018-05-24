@@ -36,7 +36,9 @@ void *thread_routine(void *arg) {
         for (int i = 0; i < filterImg.c; ++i) {
             for (int j = 0; j < filterImg.c; ++j) {
                 int halfC = (filterImg.c + 1) / 2;
-                int inputIndex = i_max(0, x - halfC + i) * inputImg.w + i_max(0, y - halfC + j);
+                int inputHeight = (i_max(0, x - halfC + i) % inputImg.h);
+                int inputWidth = (i_max(0, y - halfC + j) % inputImg.w);
+                int inputIndex = inputHeight * inputImg.w + inputWidth;
 
                 s += inputImg.img[inputIndex] * filterImg.flr[i * filterImg.c + j];
             }
