@@ -6,6 +6,7 @@
 #include <math.h>
 #include <pthread.h>
 #include <assert.h>
+#include <sys/times.h>
 #include "filter_prog.h"
 
 pgma_img_t inputImg;
@@ -53,7 +54,7 @@ void start_thread(pthread_t *thread, const pthread_attr_t *attr, void *(*start_r
     }
 }
 
-void dispatch_tasks(unsigned threadsCount) {
+void dispatch_tasks(unsigned int threadsCount) {
     assert(threadsCount > 0);
 
     threadArgs = allocate_memory(threadsCount, sizeof(thread_args_t));
@@ -72,7 +73,9 @@ void dispatch_tasks(unsigned threadsCount) {
     threadArgs[threadsCount - 1].sIndex = itr;
     threadArgs[threadsCount - 1].count = imgSize - itr;
     start_thread(&threadArgs[threadsCount - 1].pthreadID, NULL, thread_routine, threadArgs + threadsCount - 1);
+}
 
+void wait_for_threads(unsigned int threadsCount) {
     for (int i = 0; i < threadsCount; ++i) {
         pthread_join(threadArgs[i].pthreadID, NULL);
     }
@@ -94,7 +97,13 @@ int main(int argc, char *argv[]) {
     read_filter_image(argv[3], &filterImg);
     init_output_img();
 
+    struct tms tm;
+    clock_t beginTime = times(&tm);
     dispatch_tasks(tCount);
+    wait_for_threads(tCount);
+    clock_t endTime = times(&tm);
+    printf("Elapsed time (in clock ticks): %lu\n", endTime - beginTime);
+
     write_pgma_image(argv[4], &outputImg);
 
     return 0;
