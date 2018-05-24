@@ -99,14 +99,18 @@ void write_pgma_image(char *path, pgma_img_t *pgma_img) {
     assert(pgma_img != NULL);
 
     FILE *file = fopen(path, "w");
+    if (file == NULL) {
+        perror("Cannot create output file");
+        exit(EXIT_FAILURE);
+    }
 
     fprintf(file, "P2\n");
     fprintf(file, "%u %u\n", pgma_img->w, pgma_img->h);
     fprintf(file, "%u\n", pgma_img->max_g);
 
-    for (int i = 0; i < pgma_img->w; ++i) {
+    for (int i = 0; i < pgma_img->h; ++i) {
         fprintf(file, "%u", pgma_img->img[i * pgma_img->w]);
-        for (int j = 1; j < pgma_img->h; ++j) {
+        for (int j = 1; j < pgma_img->w; ++j) {
             fprintf(file, " %u", pgma_img->img[i * pgma_img->w + j]);
         }
         fprintf(file, "\n");
@@ -151,7 +155,7 @@ void read_filter_image(char *path, filter_img_t *filter) {
 
     FILE *file = fopen(path, "r");
     if (file == NULL) {
-        perror("Base image file error");
+        perror("Filter file error");
         exit(EXIT_FAILURE);
     }
 
