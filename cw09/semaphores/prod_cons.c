@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <sys/times.h>
 #include <signal.h>
+#include <semaphore.h>
 #include "../fifo/circular_fifo.h"
 
 #define MAX_STRING_LEN 256
@@ -26,9 +27,8 @@ unsigned int searched_length;
 unsigned int verbose;
 unsigned int timeout;
 
-pthread_mutex_t mutex;
-pthread_cond_t empty;
-pthread_cond_t full;
+extern sem_t emptyCount;
+extern sem_t insertedCount;
 
 void sigint_handler(int sig) {
     kill_other_threads();
@@ -68,7 +68,7 @@ void setup_resources(char *argv[]) {
         exit(EXIT_FAILURE);
     }
     initialize_queue(queueSize);
-    initialize_mutex();
+    initialize_mutex(queueSize);
 }
 
 void setup_sigint_handler() {
@@ -110,7 +110,7 @@ void print_timeout_message() {
 }
 
 void kill_other_threads() {
-    print_kill_message();
+    if (verbose) { print_kill_message(); }
     pthread_t caller = pthread_self();
     for (int i = 0; i < producersCount; ++i) {
         if (producersID[i] != caller)
@@ -120,9 +120,12 @@ void kill_other_threads() {
         if (consumersID[i] != caller)
             pthread_cancel(consumersID[i]);
     }
-    pthread_cond_broadcast(&full);
-    pthread_cond_broadcast(&empty);
-
+    for (int i = 0; i < producersCount; ++i) {
+        sem_post(&emptyCount);
+    }
+    for (int i = 0; i < consumersCount; ++i) {
+        sem_post(&insertedCount);
+    }
 }
 
 void collect_threads() {

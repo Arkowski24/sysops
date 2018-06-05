@@ -7,7 +7,7 @@
 
 void initialize_queue(unsigned int qSize);
 
-void initialize_mutex();
+void initialize_mutex(unsigned int qSize);
 
 void kill_other_threads();
 
