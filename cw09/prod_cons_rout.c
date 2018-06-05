@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <assert.h>
+#include <unistd.h>
 #include "fifo/circular_fifo.h"
 
 #define MAX_STRING_LEN 256
@@ -15,10 +16,16 @@ extern FILE *file;
 
 extern int compare_mode;
 extern int searched_length;
+extern unsigned int verbose;
+extern unsigned int timeout;
 
 pthread_mutex_t mutex;
 pthread_cond_t empty;
 pthread_cond_t full;
+
+void cleanup_handler(void *arg) {
+    pthread_mutex_unlock(&mutex);
+}
 
 void initialize_queue(unsigned int qSize) {
     size_t memSize = offsetof(CircularFifo_t, queue) + sizeof(char *) * qSize;
@@ -41,19 +48,32 @@ int my_strlen(const char *str) {
 }
 
 void *producer_routine(void *arg) {
+    pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
     while (1) {
         pthread_mutex_lock(&mutex);
-        while (fifo_full(fifo)) { pthread_cond_wait(&full, &mutex); }
+        pthread_cleanup_push(cleanup_handler, NULL) ;
 
-        char *string = calloc(sizeof(char), MAX_STRING_LEN);
-        if (fgets(string, MAX_STRING_LEN, file) == NULL) {
-            free(string);
-            pthread_exit(NULL);
-        }
+                pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+                pthread_testcancel();
 
-        fifo_push(fifo, string);
-        pthread_cond_broadcast(&empty);
-        pthread_mutex_unlock(&mutex);
+                while (fifo_full(fifo)) {
+                    pthread_cond_wait(&full, &mutex);
+                }
+
+                char *string = calloc(sizeof(char), MAX_STRING_LEN);
+                if (fgets(string, MAX_STRING_LEN, file) == NULL) {
+                    free(string);
+
+                    if (timeout == 0) { kill_other_threads(); }
+                    pthread_exit(NULL);
+                }
+
+                fifo_push(fifo, string);
+                pthread_cond_broadcast(&empty);
+
+                pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+
+        pthread_cleanup_pop(1);
     }
 }
 
@@ -79,18 +99,32 @@ int is_valid_string(char *str) {
 }
 
 void *consumer_routine(void *arg) {
+    pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+    int index;
+    char *elem;
+
     while (1) {
         pthread_mutex_lock(&mutex);
-        while (fifo_empty(fifo)) { pthread_cond_wait(&empty, &mutex); }
+        pthread_cleanup_push(cleanup_handler, NULL) ;
 
-        int index = fifo->readItr;
-        char *elem = fifo_pop(fifo);
+                pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+                pthread_testcancel();
 
-        pthread_cond_broadcast(&full);
-        pthread_mutex_unlock(&mutex);
+                while (fifo_empty(fifo)) {
+                    pthread_cond_wait(&empty, &mutex);
+                }
+
+                index = (int) fifo->readItr;
+                elem = fifo_pop(fifo);
+
+                pthread_cond_broadcast(&full);
+
+                pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+
+        pthread_cleanup_pop(1);
 
         if (is_valid_string(elem)) {
-            printf("%d %s\n", index, elem);
+            printf("%d %s", index, elem);
         }
         free(elem);
     }

@@ -9,6 +9,8 @@ void initialize_queue(unsigned int qSize);
 
 void initialize_mutex();
 
+void kill_other_threads();
+
 void *producer_routine(void *arg);
 
 void *consumer_routine(void *arg);
