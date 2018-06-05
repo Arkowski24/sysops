@@ -34,13 +34,23 @@ void parse_arguments(char *argv[]) {
     consumersCount = (unsigned int) strtoul(argv[2], NULL, 0);
     searched_length = (unsigned int) strtoul(argv[5], NULL, 0);
 
+    if(producersCount == 0 || consumersCount == 0) {
+        printf("Number of producers and consumers must be more than 0.\n");
+        exit(EXIT_FAILURE);
+    }
+
     compare_mode = (int) strtol(argv[6], NULL, 0);
     verbose = (unsigned int) strtoul(argv[7], NULL, 0);
     timeout = (unsigned int) strtoul(argv[8], NULL, 0);
 }
 
 FILE *open_file(char *filename) {
-    return fopen(filename, "r");
+    FILE * file = fopen(filename, "r");
+    if(file == NULL) {
+        perror("Open file error.");
+        exit(EXIT_FAILURE);
+    }
+    return file;
 }
 
 void setup(char *argv[]) {
@@ -48,6 +58,10 @@ void setup(char *argv[]) {
     file = open_file(argv[4]);
 
     unsigned int queueSize = (unsigned int) strtoul(argv[3], NULL, 0);
+    if(queueSize == 0) {
+        printf("Queue size must be more than 0.\n");
+        exit(EXIT_FAILURE);
+    }
     initialize_queue(queueSize);
     initialize_mutex();
 }
@@ -108,6 +122,11 @@ void collect_threads() {
 }
 
 int main(int argc, char *argv[]) {
+    if(argc < 9) {
+        printf("Not enough arguments.\n");
+        exit(EXIT_FAILURE);
+    }
+
     setup(argv);
     dispatch_tasks();
 
