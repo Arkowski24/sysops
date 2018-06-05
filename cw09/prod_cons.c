@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <unistd.h>
+#include <sys/times.h>
 #include "fifo/circular_fifo.h"
 
 #define MAX_STRING_LEN 256
@@ -73,7 +74,16 @@ void dispatch_tasks() {
     }
 }
 
+void print_kill_message() {
+    printf("%ld: Thread %ld is cancelling other threads.\n", times(NULL), pthread_self());
+}
+
+void print_timeout_message() {
+    printf("%ld: Maximum time reached. \n", times(NULL));
+}
+
 void kill_other_threads() {
+    print_kill_message();
     pthread_t caller = pthread_self();
     for (int i = 0; i < producersCount; ++i) {
         if (producersID[i] != caller)
@@ -103,6 +113,7 @@ int main(int argc, char *argv[]) {
 
     if (timeout > 0) {
         sleep(timeout);
+        if (verbose) { print_timeout_message(); }
         kill_other_threads();
     }
     collect_threads();
