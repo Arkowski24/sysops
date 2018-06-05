@@ -26,9 +26,8 @@ unsigned int searched_length;
 unsigned int verbose;
 unsigned int timeout;
 
-pthread_mutex_t mutex;
-pthread_cond_t empty;
-pthread_cond_t full;
+extern pthread_cond_t empty;
+extern pthread_cond_t full;
 
 void sigint_handler(int sig) {
     kill_other_threads();

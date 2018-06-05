@@ -12,7 +12,7 @@
 
 #define MAX_STRING_LEN 256
 
-CircularFifo_t *fifo;
+extern CircularFifo_t *fifo;
 extern FILE *file;
 
 extern int compare_mode;
