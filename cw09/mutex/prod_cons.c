@@ -8,7 +8,7 @@
 #include <assert.h>
 #include <unistd.h>
 #include <sys/times.h>
-#include "fifo/circular_fifo.h"
+#include "../fifo/circular_fifo.h"
 
 #define MAX_STRING_LEN 256
 
