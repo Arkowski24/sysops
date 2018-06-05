@@ -8,6 +8,7 @@
 #include <assert.h>
 #include <unistd.h>
 #include <sys/times.h>
+#include <signal.h>
 #include "../fifo/circular_fifo.h"
 
 #define MAX_STRING_LEN 256
@@ -29,12 +30,16 @@ pthread_mutex_t mutex;
 pthread_cond_t empty;
 pthread_cond_t full;
 
+void sigint_handler(int sig) {
+    kill_other_threads();
+}
+
 void parse_arguments(char *argv[]) {
     producersCount = (unsigned int) strtoul(argv[1], NULL, 0);
     consumersCount = (unsigned int) strtoul(argv[2], NULL, 0);
     searched_length = (unsigned int) strtoul(argv[5], NULL, 0);
 
-    if(producersCount == 0 || consumersCount == 0) {
+    if (producersCount == 0 || consumersCount == 0) {
         printf("Number of producers and consumers must be more than 0.\n");
         exit(EXIT_FAILURE);
     }
@@ -45,25 +50,33 @@ void parse_arguments(char *argv[]) {
 }
 
 FILE *open_file(char *filename) {
-    FILE * file = fopen(filename, "r");
-    if(file == NULL) {
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
         perror("Open file error.");
         exit(EXIT_FAILURE);
     }
     return file;
 }
 
-void setup(char *argv[]) {
+void setup_resources(char *argv[]) {
     parse_arguments(argv);
     file = open_file(argv[4]);
 
     unsigned int queueSize = (unsigned int) strtoul(argv[3], NULL, 0);
-    if(queueSize == 0) {
+    if (queueSize == 0) {
         printf("Queue size must be more than 0.\n");
         exit(EXIT_FAILURE);
     }
     initialize_queue(queueSize);
     initialize_mutex();
+}
+
+void setup_sigint_handler() {
+    if (timeout) {
+        signal(SIGINT, SIG_IGN);
+    } else {
+        signal(SIGINT, sigint_handler);
+    }
 }
 
 void start_thread(pthread_t *thread, const pthread_attr_t *attr, void *(*start_routine)(void *), void *arg) {
@@ -122,12 +135,14 @@ void collect_threads() {
 }
 
 int main(int argc, char *argv[]) {
-    if(argc < 9) {
+    if (argc < 9) {
         printf("Not enough arguments.\n");
         exit(EXIT_FAILURE);
     }
 
-    setup(argv);
+    setup_resources(argv);
+    setup_sigint_handler();
+
     dispatch_tasks();
 
     if (timeout > 0) {
