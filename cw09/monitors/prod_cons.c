@@ -109,7 +109,7 @@ void print_timeout_message() {
 }
 
 void kill_other_threads() {
-    print_kill_message();
+    if (verbose) { print_kill_message(); }
     pthread_t caller = pthread_self();
     for (int i = 0; i < producersCount; ++i) {
         if (producersID[i] != caller)
