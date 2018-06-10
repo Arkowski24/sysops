@@ -5,7 +5,7 @@
 #include <pthread.h>
 #include <assert.h>
 #include "math_server.h"
-#include "../../fifo/circular_fifo.h"
+#include "../fifo/circular_fifo.h"
 
 int networkSocketDesc;
 
