@@ -8,17 +8,31 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "../fifo/circular_fifo.h"
 #include "math_server.h"
 #include "math_server_worker.h"
-#include "../fifo/circular_fifo.h"
+#include "math_server_local.h"
+#include "math_server_network.h"
 
 CircularFifo_t *fifo;
 pthread_mutex_t fifoMutex;
 pthread_cond_t fifoEmpty;
 
+void initialize_queue(unsigned int qSize) {
+    size_t memSize = offsetof(CircularFifo_t, queue) + sizeof(char *) * qSize;
+    fifo = malloc(memSize);
+    fifo_initialize(fifo, qSize);
+}
+
 void print_task_result(void *result) {
     double *taskResult = (double *) result;
     printf("%lf\n", *taskResult);
+}
+
+char *get_required_name(const struct tlv_msg *msg) {
+    char *name = malloc(msg->length);
+    memcpy(name, msg->value, msg->length);
+    return name;
 }
 
 struct tlv_msg *create_task(BinaryOperation_t *operation, size_t *msgSize) {
@@ -31,18 +45,18 @@ struct tlv_msg *create_task(BinaryOperation_t *operation, size_t *msgSize) {
     return msg;
 }
 
-struct tlv_msg *read_response(int socket, struct sockaddr *src_addr, socklen_t addrlen, int flags) {
+struct tlv_msg *read_response(int socket, struct sockaddr *src_addr, socklen_t addrlen) {
     size_t resSize = offsetof(struct tlv_msg, value);
     struct tlv_msg *res = malloc(resSize);
 
-    if (recvfrom(socket, res, resSize, MSG_PEEK | flags, src_addr, &addrlen) == -1) {
+    if (recvfrom(socket, res, resSize, MSG_PEEK, src_addr, &addrlen) == -1) {
         free(res);
         return NULL;
     }
 
     resSize += res->length;
-    realloc(res, resSize);
-    if (recvfrom(socket, res, resSize, 0 | flags, src_addr, &addrlen) == -1) {
+    res = realloc(res, resSize);
+    if (recvfrom(socket, res, resSize, 0, src_addr, &addrlen) == -1) {
         free(res);
         return NULL;
     }
@@ -51,6 +65,7 @@ struct tlv_msg *read_response(int socket, struct sockaddr *src_addr, socklen_t a
 }
 
 void *process_task_routine(void *operation) {
+    pthread_detach(pthread_self());
     BinaryOperation_t *binaryOperation = (BinaryOperation_t *) operation;
 
     Client_t *worker;
@@ -75,6 +90,31 @@ void *process_task_routine(void *operation) {
             reinsert_worker(worker);
         }
     }
+    free(operation);
 
     return NULL;
+}
+
+int main(int argc, char *argv[]) {
+    initialize_queue(MAX_LOCAL_CLIENTS + MAX_NETWORK_CLIENTS);
+
+    local_socket_init(argv[1]);
+    int port = atoi(argv[2]);
+    network_socket_init(port);
+
+    int cont = 1;
+    while (cont) {
+        BinaryOperation_t *operation = malloc(sizeof(BinaryOperation_t));
+        scanf("%c %lf %lf", &operation->operation, &operation->op1, &operation->op2);
+
+        if (operation->operation == 'e') {
+            free(operation);
+            cont = 0;
+        } else {
+            pthread_t threadID;
+            pthread_create(&threadID, NULL, process_task_routine, operation);
+        }
+    }
+
+    return 0;
 }

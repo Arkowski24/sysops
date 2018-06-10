@@ -8,8 +8,10 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "math_server.h"
 #include "../fifo/circular_fifo.h"
+#include "math_server.h"
+#include "math_server_local.h"
+#include "math_server_network.h"
 
 extern CircularFifo_t *fifo;
 extern pthread_mutex_t fifoMutex;
