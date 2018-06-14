@@ -41,14 +41,11 @@ void delete_worker(int type, int index) {
 }
 
 Client_t *fetch_worker() {
-    pthread_mutex_lock(&fifoMutex);
-
     while (fifo_empty(fifo)) {
         pthread_cond_wait(&fifoEmpty, &fifoMutex);
     }
     Client_t *client = fifo_pop(fifo);
 
-    pthread_mutex_unlock(&fifoMutex);
     return client;
 }
 

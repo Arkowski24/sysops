@@ -23,10 +23,14 @@ void network_socket_init(uint16_t port);
 
 int is_present_network(int index);
 
+int is_unique_name_network(char *name);
+
 void deregister_network_client_i(int index);
 
 void process_network_messages();
 
 void *network_task_routine(int index, BinaryOperation_t *operation);
+
+void *network_ping_routine(int index, uint8_t msgType);
 
 #endif //SYSOPS_MATH_SERVER_NETWORK_H

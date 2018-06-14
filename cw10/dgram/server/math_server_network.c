@@ -31,11 +31,7 @@ int in_equal(struct sockaddr_in op1, struct sockaddr_in op2) {
 }
 
 ClientNetwork_t *retrieve_network(int index) {
-    pthread_mutex_lock(&fifoMutex);
-    ClientNetwork_t *clientLocal = networkClients[index];
-    pthread_mutex_unlock(&fifoMutex);
-
-    return clientLocal;
+    return networkClients[index];
 }
 
 int register_network_client(ClientNetwork_t *client) {
@@ -43,7 +39,7 @@ int register_network_client(ClientNetwork_t *client) {
 
     pthread_mutex_lock(&fifoMutex);
 
-    if (networkClientsCount == MAX_NETWORK_CLIENTS) {
+    if (networkClientsCount == MAX_NETWORK_CLIENTS || !is_unique_name(client->name)) {
         pthread_mutex_unlock(&fifoMutex);
         return -1;
     }
@@ -115,9 +111,19 @@ void network_socket_init(uint16_t port) {
 }
 
 int is_present_network(int index) {
-    assert(index < MAX_NETWORK_CLIENTS);
+    if (index >= MAX_NETWORK_CLIENTS) { return 0; }
 
     return networkClients[index] == NULL;
+}
+
+int is_unique_name_network(char *name) {
+    int uniq = 1;
+    for (int i = 0; i < MAX_NETWORK_CLIENTS && uniq; ++i) {
+        if (networkClients[i] != NULL) {
+            uniq = uniq && strcmp(networkClients[i]->name, name) == 0;
+        }
+    }
+    return uniq;
 }
 
 void deregister_network_client_i(int index) {
@@ -162,26 +168,31 @@ void *network_task_routine(int index, BinaryOperation_t *operation) {
 
     size_t msgSize;
     struct tlv_msg *msg = create_task(operation, &msgSize);
-    struct tlv_msg *res = NULL;
-
-    unsigned int tries = 0;
 
     pthread_rwlock_rdlock(&networkSocketLock);
-    while (tries < MAX_NETWORK_TRIES) {
-        sendto(networkInSocketDesc, msg, msgSize, 0, (struct sockaddr *) &worker->address, sizeof(struct sockaddr_in));
+    struct tlv_msg *res = send_message_and_read_response(networkInSocketDesc, msg, msgSize,
+                                                         (struct sockaddr *) &worker->address,
+                                                         MAX_NETWORK_TRIES, NETWORK_USLEEP_VAL);
+    pthread_rwlock_unlock(&networkSocketLock);
+    free(msg);
 
-        usleep(NETWORK_USLEEP_VAL);
+    return res;
+}
 
-        res = read_response(networkInSocketDesc, (struct sockaddr *) &worker->address, sizeof(struct sockaddr_in));
-        if (res->type == MESSAGE_TYPE_RESULT) {
-            break;
-        } else if (res->type == MESSAGE_TYPE_DEREGISTER) {
-            break;
-        }
+void *network_ping_routine(int index, uint8_t msgType) {
+    ClientNetwork_t *worker = retrieve_network(index);
 
-        free(res);
-        tries++;
+    if (worker == NULL) {
+        return NULL;
     }
+
+    size_t msgSize;
+    struct tlv_msg *msg = create_type_message(&msgSize, msgType);
+
+    pthread_rwlock_rdlock(&networkSocketLock);
+    struct tlv_msg *res = send_message_and_read_response(networkInSocketDesc, msg, msgSize,
+                                                         (struct sockaddr *) &worker->address,
+                                                         MAX_NETWORK_TRIES, NETWORK_USLEEP_VAL);
     pthread_rwlock_unlock(&networkSocketLock);
     free(msg);
 

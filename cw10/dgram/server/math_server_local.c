@@ -32,11 +32,7 @@ int un_equal(struct sockaddr_un op1, struct sockaddr_un op2) {
 }
 
 ClientLocal_t *retrieve_local(int index) {
-    pthread_mutex_lock(&fifoMutex);
-    ClientLocal_t *clientLocal = localClients[index];
-    pthread_mutex_unlock(&fifoMutex);
-
-    return clientLocal;
+    return localClients[index];;
 }
 
 int register_local_client(ClientLocal_t *client) {
@@ -44,7 +40,7 @@ int register_local_client(ClientLocal_t *client) {
 
     pthread_mutex_lock(&fifoMutex);
 
-    if (localClientsCount == MAX_LOCAL_CLIENTS) {
+    if (localClientsCount == MAX_LOCAL_CLIENTS || !is_unique_name(client->name)) {
         pthread_mutex_unlock(&fifoMutex);
         return -1;
     }
@@ -117,9 +113,19 @@ void local_socket_init(char *socketPath) {
 }
 
 int is_present_local(int index) {
-    assert(index < MAX_LOCAL_CLIENTS);
+    if (index >= MAX_LOCAL_CLIENTS) { return 0; }
 
     return localClients[index] == NULL;
+}
+
+int is_unique_name_local(char *name) {
+    int uniq = 1;
+    for (int i = 0; i < MAX_LOCAL_CLIENTS && uniq; ++i) {
+        if (localClients[i] != NULL) {
+            uniq = uniq && strcmp(localClients[i]->name, name) == 0;
+        }
+    }
+    return uniq;
 }
 
 void deregister_local_client_i(int index) {
@@ -164,26 +170,31 @@ void *local_task_routine(int index, BinaryOperation_t *operation) {
 
     size_t msgSize;
     struct tlv_msg *msg = create_task(operation, &msgSize);
-    struct tlv_msg *res = NULL;
-
-    unsigned int tries = 0;
 
     pthread_rwlock_rdlock(&localSocketLock);
-    while (tries < MAX_LOCAL_TRIES) {
-        sendto(localInSocketDesc, msg, msgSize, 0, (struct sockaddr *) &worker->address, sizeof(struct sockaddr_un));
+    struct tlv_msg *res = send_message_and_read_response(localInSocketDesc, msg, msgSize,
+                                                         (struct sockaddr *) &worker->address,
+                                                         MAX_LOCAL_TRIES, LOCAL_USLEEP_VAL);
+    pthread_rwlock_unlock(&localSocketLock);
+    free(msg);
 
-        usleep(LOCAL_USLEEP_VAL);
+    return res;
+}
 
-        res = read_response(localInSocketDesc, (struct sockaddr *) &worker->address, sizeof(struct sockaddr_un));
-        if (res->type == MESSAGE_TYPE_RESULT) {
-            break;
-        } else if (res->type == MESSAGE_TYPE_DEREGISTER) {
-            break;
-        }
+void *local_ping_routine(int index, uint8_t msgType)  {
+    ClientLocal_t *worker = retrieve_local(index);
 
-        free(res);
-        tries++;
+    if (worker == NULL) {
+        return NULL;
     }
+
+    size_t msgSize;
+    struct tlv_msg *msg = create_type_message(&msgSize, msgType);
+
+    pthread_rwlock_rdlock(&localSocketLock);
+    struct tlv_msg *res = send_message_and_read_response(localInSocketDesc, msg, msgSize,
+                                                         (struct sockaddr *) &worker->address,
+                                                         MAX_LOCAL_TRIES, LOCAL_USLEEP_VAL);
     pthread_rwlock_unlock(&localSocketLock);
     free(msg);
 
