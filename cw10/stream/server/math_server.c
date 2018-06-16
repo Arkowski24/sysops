@@ -129,12 +129,17 @@ void *operation_routine(void *arg) {
         int discard = 0;
         discard = (send(worker->sDesc, oMsg, oSize, MSG_NOSIGNAL) <= 0);
         discard = discard || (recv(worker->sDesc, rMsg, rSize, MSG_NOSIGNAL | MSG_WAITALL) <= 0);
-        discard = discard || rMsg->type != MESSAGE_TYPE_RESPONSE;
+        discard = discard || (rMsg->type != MESSAGE_TYPE_RESPONSE && rMsg->type != MESSAGE_TYPE_STATUS);
 
         if (discard) {
             discard_worker(worker);
         } else {
-            memcpy(result, &rMsg->value, sizeof(double));
+            if (rMsg->type == MESSAGE_TYPE_RESPONSE) {
+                memcpy(result, &rMsg->value, sizeof(double));
+            } else {
+                free(result);
+                result = NULL;
+            }
 
             fifo_push(fifo, worker);
             break;
@@ -353,6 +358,8 @@ void shutdown_all_workers(pthread_t snifferID) {
 
 void sigint_handler(int sig) {
     cont = 0;
+    alarm(10);
+    printf("Shutting down.\n");
 }
 
 int main(int argc, char *argv[]) {
@@ -375,9 +382,11 @@ int main(int argc, char *argv[]) {
 
     while (cont) {
         BinaryOperation_t *operation = malloc(sizeof(BinaryOperation_t));
-        scanf("%lf %c %lf", &operation->op1, &operation->operator, &operation->op2);
+        if (scanf("%lf %c %lf", &operation->op1, &operation->operator, &operation->op2) < 3) {
+            break;
+        }
 
-        if (operation->operator == 'e') {
+        if (operation->operator == '0') {
             break;
         }
 
@@ -386,8 +395,12 @@ int main(int argc, char *argv[]) {
 
         void *res;
         pthread_join(supervisorID, &res);
-        printf("%lf\n", *(double *) res);
-        free(res);
+        if (res == NULL) {
+            printf("Unknown operation.\n");
+        } else {
+            printf("%lf\n", *(double *) res);
+            free(res);
+        }
     }
 
     shutdown_all_workers(snifferID);

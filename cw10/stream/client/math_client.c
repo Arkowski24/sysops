@@ -15,7 +15,6 @@
 
 #define _BSD_SOURCE
 
-volatile int cont = 1;
 int clientSocket;
 
 void cleanup_and_exit() {
@@ -92,17 +91,26 @@ void register_worker(char *name) {
 
     tlvMsg_t *retMsg = read_msg(clientSocket);
 
-    if(retMsg == NULL) {
+    if (retMsg == NULL) {
         return;
-    }else if (retMsg->type == STATUS_OK) {
-        printf("Registered successfully.\n");
-
+    } else if (retMsg->type == MESSAGE_TYPE_STATUS) {
+        uint8_t status;
+        memcpy(&status, &retMsg->value, sizeof(uint8_t));
         free(retMsg);
-    } else if (retMsg->type == ERROR_NAME_TAKEN) {
-        printf("Error: Name is already taken.\n");
 
-        free(retMsg);
-        cleanup_and_exit();
+        switch (status) {
+            case STATUS_OK:
+                printf("Registration successful.\n");
+                break;
+            case ERROR_NAME_TAKEN:
+                printf("Name already taken.\n");
+                cleanup_and_exit();
+                break;
+            default:
+                printf("Received unknown status.\n");
+                break;
+        }
+
     }
 }
 
@@ -189,7 +197,9 @@ void process_message() {
 }
 
 void sigint_handler(int sig) {
-    cont = 0;
+    deregister_worker();
+    shutdown(clientSocket, SHUT_RDWR);
+    exit(EXIT_SUCCESS);
 }
 
 int main(int argc, char *argv[]) {
@@ -208,14 +218,7 @@ int main(int argc, char *argv[]) {
 
     register_worker(argv[1]);
 
-    while (cont) {
+    while (1) {
         process_message();
     }
-
-    deregister_worker();
-
-    shutdown(clientSocket, SHUT_RDWR);
-    close(clientSocket);
-
-    return 0;
 }

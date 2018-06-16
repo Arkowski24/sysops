@@ -74,11 +74,11 @@ int fifo_unique_name(CircularFifo_t *fifo, char *name) {
     int isUnique = 1;
 
     int i = 0;
-    while (i < fifo->qSize) {
+    while (i < fifo_size(fifo)) {
         size_t index = (fifo->readItr + i) % fifo->qMaxSize;
         Worker_t *checked = fifo->queue[index];
 
-        isUnique = isUnique && !strcmp(checked->name, name);
+        isUnique = isUnique && strcmp(checked->name, name) != 0;
         if (!isUnique) { break; }
 
         i++;
