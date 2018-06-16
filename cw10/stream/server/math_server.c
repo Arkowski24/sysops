@@ -13,16 +13,15 @@
 #include <netinet/in.h>
 #include <sys/un.h>
 #include <stdio.h>
+#include <signal.h>
 #include "fifo/circular_fifo.h"
 #include "math_server.h"
-
-#define UNIX_PATH_MAX 108
-#define MAX_REGISTRATION_NAME 256
 
 CircularFifo_t *fifo;
 pthread_mutex_t fifoMutex;
 pthread_cond_t fifoEmpty;
 
+int cont = 1;
 int publicLocalSocket;
 int publicNetworkSocket;
 
@@ -71,6 +70,38 @@ tlvMsg_t *create_tlv_msg(uint8_t type, void *val, size_t len, size_t *fSize) {
     if (val != NULL) { memcpy(&msg->value, val, len); }
 
     return msg;
+}
+
+void send_status_message(int desc, uint8_t errorCode) {
+    size_t errSize;
+    tlvMsg_t *errMsg = create_tlv_msg(MESSAGE_TYPE_STATUS, &errorCode, sizeof(uint8_t), &errSize);
+    send(desc, errMsg, errSize, MSG_NOSIGNAL);
+    free(errMsg);
+}
+
+int ping_client(int desc) {
+    int ok = 1;
+
+    size_t pingSize;
+    tlvMsg_t *pingMsg = create_tlv_msg(MESSAGE_TYPE_PING, NULL, 0, &pingSize);
+    size_t pongSize;
+    tlvMsg_t *pongMsg = create_tlv_msg(MESSAGE_TYPE_PONG, NULL, 0, &pongSize);
+
+    ok = ok && (send(desc, pingMsg, pingSize, MSG_NOSIGNAL) > 0);
+
+    struct pollfd fdPoll;
+    fdPoll.fd = desc;
+    fdPoll.events = POLLIN;
+    poll(&fdPoll, 1, PING_POLL_TIMEOUT);
+
+    ok = ok && fdPoll.revents & POLLIN;
+    ok = ok && (recv(desc, pongMsg, pongSize, MSG_NOSIGNAL | MSG_WAITALL | MSG_DONTWAIT) > 0);
+    ok = ok && pongMsg->type == MESSAGE_TYPE_PONG;
+
+    free(pingMsg);
+    free(pongMsg);
+
+    return ok;
 }
 
 void discard_worker(Worker_t *worker) {
@@ -166,10 +197,12 @@ void *register_worker_routine(void *args) {
     if (fifo_unique_name(fifo, reqName)) {
         Worker_t *worker = create_worker(sDesc, reqName);
         fifo_push(fifo, worker);
+        send_status_message(sDesc, STATUS_OK);
 
         printf("Worker registered: %s\n", reqName);
         pthread_cond_broadcast(&fifoEmpty);
     } else {
+        send_status_message(sDesc, ERROR_NAME_TAKEN);
         close_communication(sDesc);
     }
     pthread_mutex_unlock(&fifoMutex);
@@ -180,7 +213,7 @@ void *register_worker_routine(void *args) {
 }
 
 void *deregister_worker_routine(void *args) {
-    pthread_detach(pthread_self());
+//    pthread_detach(pthread_self());
     int sDesc = *(int *) args;
     free(args);
 
@@ -200,6 +233,7 @@ void *deregister_worker_routine(void *args) {
             free(worker);
         }
 
+        send_status_message(sDesc, STATUS_OK);
         close_communication(sDesc);
     }
     pthread_mutex_unlock(&fifoMutex);
@@ -241,9 +275,9 @@ void process_worker_messages() {
     }
     pthread_mutex_unlock(&fifoMutex);
 
-//    for (int k = 0; k < toClean; ++k) {
-//        pthread_join(cleaners[k], NULL);
-//    }
+    for (int k = 0; k < toClean; ++k) {
+        pthread_join(cleaners[k], NULL);
+    }
 }
 
 void process_public_messages(struct pollfd cPoll[], size_t cPollCount) {
@@ -261,7 +295,7 @@ void process_public_messages(struct pollfd cPoll[], size_t cPollCount) {
     }
 }
 
-void *process_messages(void *arg) {
+void *process_messages_routine(void *arg) {
     struct pollfd publicPoll[2];
     publicPoll[0].fd = publicLocalSocket;
     publicPoll[0].events = POLLIN;
@@ -280,6 +314,32 @@ void *process_messages(void *arg) {
     return NULL;
 }
 
+void *periodic_ping_routine(void *arg) {
+    pthread_detach(pthread_self());
+
+    while (1) {
+        pthread_testcancel();
+
+        pthread_mutex_lock(&fifoMutex);
+        size_t toCheck = fifo_size(fifo);
+        for (int i = 0; i < toCheck; ++i) {
+            Worker_t *worker = fifo_pop(fifo);
+
+            if (ping_client(worker->sDesc)) {
+                fifo_push(fifo, worker);
+            } else {
+                discard_worker(worker);
+            }
+        }
+        pthread_mutex_unlock(&fifoMutex);
+
+        if (arg != NULL && *(int *) arg == 0) { break; }
+        sleep(PING_THREAD_SLEEP);
+    }
+
+    return NULL;
+}
+
 void shutdown_all_workers(pthread_t snifferID) {
     pthread_cancel(snifferID);
 
@@ -291,11 +351,16 @@ void shutdown_all_workers(pthread_t snifferID) {
     pthread_mutex_unlock(&fifoMutex);
 }
 
+void sigint_handler(int sig) {
+    cont = 0;
+}
+
 int main(int argc, char *argv[]) {
     if (argc < 3) {
         exit(EXIT_FAILURE);
     }
 
+    signal(SIGINT, sigint_handler);
     initialize_queue(ALL_CLIENTS_MAX);
     initialize_mutex_and_cond();
 
@@ -304,9 +369,11 @@ int main(int argc, char *argv[]) {
     network_socket_init(port);
 
     pthread_t snifferID;
-    pthread_create(&snifferID, NULL, process_messages, NULL);
+    pthread_t pingerID;
+    pthread_create(&snifferID, NULL, process_messages_routine, NULL);
+    pthread_create(&pingerID, NULL, periodic_ping_routine, NULL);
 
-    while (1) {
+    while (cont) {
         BinaryOperation_t *operation = malloc(sizeof(BinaryOperation_t));
         scanf("%lf %c %lf", &operation->op1, &operation->operator, &operation->op2);
 
