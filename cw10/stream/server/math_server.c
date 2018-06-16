@@ -135,22 +135,30 @@ Worker_t *create_worker(int sDesc, char *name) {
 }
 
 void *register_worker_routine(void *args) {
+    pthread_detach(pthread_self());
     int sDesc = *(int *) args;
     free(args);
 
-
     pthread_mutex_lock(&fifoMutex);
 
-    size_t rSize;
-    tlvMsg_t *rMsg = create_tlv_msg(MESSAGE_TYPE_REGISTER, NULL, MAX_REGISTRATION_NAME, &rSize);
+    size_t pSize;
+    tlvMsg_t *pMsg = create_tlv_msg(MESSAGE_TYPE_REGISTER, NULL, 0, &pSize);
 
     int nReg = fifo_full(fifo);
-    nReg = nReg || (recv(sDesc, rMsg, rSize, MSG_NOSIGNAL) <= 0);
-    nReg = nReg || rMsg->type != MESSAGE_TYPE_REGISTER;
+    nReg = nReg || (recv(sDesc, pMsg, pSize, MSG_NOSIGNAL | MSG_PEEK | MSG_WAITALL) <= 0);
+    nReg = nReg || pMsg->type != MESSAGE_TYPE_REGISTER;
+
+    size_t rSize;
+    tlvMsg_t *rMsg = create_tlv_msg(MESSAGE_TYPE_REGISTER, NULL, pMsg->length, &rSize);
+    free(pMsg);
+
+    nReg = nReg || (recv(sDesc, rMsg, rSize, MSG_NOSIGNAL | MSG_WAITALL) <= 0);
 
     if (nReg) {
         close_communication(sDesc);
         free(rMsg);
+
+        pthread_mutex_unlock(&fifoMutex);
         pthread_exit(NULL);
     }
 
@@ -172,6 +180,7 @@ void *register_worker_routine(void *args) {
 }
 
 void *deregister_worker_routine(void *args) {
+    pthread_detach(pthread_self());
     int sDesc = *(int *) args;
     free(args);
 
@@ -181,14 +190,17 @@ void *deregister_worker_routine(void *args) {
     tlvMsg_t *rMsg = create_tlv_msg(MESSAGE_TYPE_DEREGISTER, NULL, 0, &rSize);
 
     int deReg;
-    deReg = (recv(sDesc, rMsg, rSize, MSG_NOSIGNAL) <= 0);
+    deReg = (recv(sDesc, rMsg, rSize, MSG_NOSIGNAL | MSG_WAITALL) <= 0);
     deReg = deReg || rMsg->type == MESSAGE_TYPE_DEREGISTER;
 
     if (deReg) {
-        fifo_delete(fifo, sDesc);
+        Worker_t *worker = fifo_find(fifo, sDesc);
+        if (worker != NULL) {
+            printf("Deregistered worker: %s\n", worker->name);
+            free(worker);
+        }
+
         close_communication(sDesc);
-        free(rMsg);
-        pthread_exit(NULL);
     }
     pthread_mutex_unlock(&fifoMutex);
 
@@ -206,8 +218,8 @@ void process_worker_messages() {
 
     size_t toCheck = fifo_size(fifo);
     struct pollfd workerPoll[toCheck];
-    pthread_t creators[toCheck];
-    int crt = 0;
+    pthread_t cleaners[toCheck];
+    int toClean = 0;
 
     for (int i = 0; i < toCheck; ++i) {
         Worker_t *worker = fifo_pop(fifo);
@@ -223,14 +235,14 @@ void process_worker_messages() {
             int *desc = malloc(sizeof(int));
             *desc = workerPoll[j].fd;
 
-            pthread_create(creators + crt, NULL, deregister_worker_routine, desc);
-            crt++;
+            pthread_create(cleaners + toClean, NULL, deregister_worker_routine, desc);
+            toClean++;
         }
     }
     pthread_mutex_unlock(&fifoMutex);
 
-//    for (int k = 0; k < crt; ++k) {
-//        pthread_join(creators[k], NULL);
+//    for (int k = 0; k < toClean; ++k) {
+//        pthread_join(cleaners[k], NULL);
 //    }
 }
 
@@ -296,12 +308,7 @@ int main(int argc, char *argv[]) {
 
     while (1) {
         BinaryOperation_t *operation = malloc(sizeof(BinaryOperation_t));
-        //scanf("%lf %c %lf", &operation->op1, &operation->operator, &operation->op2);
-
-        operation->op1 = 10;
-        operation->op2 = 5;
-        operation->operator = '+';
-        sleep(2);
+        scanf("%lf %c %lf", &operation->op1, &operation->operator, &operation->op2);
 
         if (operation->operator == 'e') {
             break;

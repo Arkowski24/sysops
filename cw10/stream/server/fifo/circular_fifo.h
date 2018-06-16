@@ -38,6 +38,6 @@ int fifo_unique(CircularFifo_t *fifo, Worker_t *elem);
 
 int fifo_unique_name(CircularFifo_t *fifo, char *name);
 
-int fifo_delete(CircularFifo_t* fifo, int sDesc);
+Worker_t *fifo_find(CircularFifo_t *fifo, int sDesc);
 
 #endif //SYSOPS_CIRCLE_FIFO_H

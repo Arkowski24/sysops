@@ -87,19 +87,18 @@ int fifo_unique_name(CircularFifo_t *fifo, char *name) {
     return isUnique;
 }
 
-int fifo_delete(CircularFifo_t *fifo, int sDesc) {
+Worker_t *fifo_find(CircularFifo_t *fifo, int sDesc) {
     size_t toCheck = fifo_size(fifo);
 
     while (toCheck > 0) {
         Worker_t *worker = fifo_pop(fifo);
 
         if (worker->sDesc == sDesc) {
-            free(worker);
-            return 1;
+            return worker;
         } else {
             fifo_push(fifo, worker);
             toCheck--;
         }
     }
-    return 0;
+    return NULL;
 }
