@@ -4,5 +4,7 @@ project(sysops)
 set(CMAKE_C_STANDARD 99)
 
 find_package(Threads)
-add_executable(MATH_SERVER cw10/dgram/server/math_server.c cw10/dgram/server/math_server.h cw10/dgram/fifo/circular_fifo.c cw10/dgram/fifo/circular_fifo.h cw10/dgram/server/math_server_local.c cw10/dgram/server/math_server_network.c cw10/dgram/server/math_server_network.h cw10/dgram/server/math_server_worker.c cw10/dgram/server/math_server_worker.h cw10/dgram/server/math_server_local.h cw10/dgram/server/math_server_network.h)
+add_executable(MATH_SERVER cw10/stream/server/math_server.c cw10/stream/server/math_server.h cw10/stream/server/fifo/circular_fifo.c cw10/stream/server/fifo/circular_fifo.h)
+add_executable(MATH_CLIENT cw10/stream/client/math_client.c cw10/stream/client/math_client.h)
 target_link_libraries(MATH_SERVER pthread)
+target_link_libraries(MATH_CLIENT pthread)

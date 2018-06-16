@@ -1,9 +1,9 @@
 //
-// Created by farald on 07.06.18.
+// Created by farald on 16.06.18.
 //
 
-#ifndef SYSOPS_MATH_SERVER_H
-#define SYSOPS_MATH_SERVER_H
+#ifndef SYSOPS_MATH_CLIENT_H
+#define SYSOPS_MATH_CLIENT_H
 
 #include <stdint.h>
 
@@ -12,14 +12,6 @@
 #define MESSAGE_TYPE_ERROR 0x03
 #define MESSAGE_TYPE_REQUEST 0x04
 #define MESSAGE_TYPE_RESPONSE 0x05
-
-#define ERROR_REG_FIRST 0x01
-
-#define POLL_TIMEOUT 2000
-
-#define LOCAL_CLIENT_PENDING_MAX 32
-#define NETWORK_CLIENT_PENDING_MAX 32
-#define ALL_CLIENTS_MAX 64
 
 struct {
     char operator;
@@ -33,4 +25,5 @@ struct {
     uint8_t value[];
 } typedef tlvMsg_t;
 
-#endif //SYSOPS_MATH_SERVER_H
+
+#endif //SYSOPS_MATH_CLIENT_H
