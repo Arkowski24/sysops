@@ -25,23 +25,17 @@ void cleanup_and_exit() {
     exit(EXIT_FAILURE);
 }
 
-void local_client_socket_init(char *socketPath) {
-    int clientSocket = socket(AF_UNIX, SOCK_DGRAM, 0);
-
-    struct sockaddr_un sockaddrUn;
-    sockaddrUn.sun_family = AF_UNIX;
-    strcpy(sockaddrUn.sun_path, socketPath);
-
-    bind(clientSocket, (struct sockaddr *) &sockaddrUn, sizeof(sockaddrUn));
-}
-
-
-void local_socket_init(char *socketPath) {
+void local_socket_init(char *serverPath, char *clientPath) {
     clientSocket = socket(AF_UNIX, SOCK_DGRAM, 0);
+
+    struct sockaddr_un clientAddr;
+    clientAddr.sun_family = AF_UNIX;
+    strcpy(clientAddr.sun_path, clientPath);
+    bind(clientSocket, (struct sockaddr *) &clientAddr, sizeof(clientAddr));
 
     struct sockaddr_un serverAddr;
     serverAddr.sun_family = AF_UNIX;
-    strcpy(serverAddr.sun_path, socketPath);
+    strcpy(serverAddr.sun_path, serverPath);
 
     connect(clientSocket, (struct sockaddr *) &serverAddr, sizeof(struct sockaddr_un));
 }
@@ -230,8 +224,7 @@ int main(int argc, char *argv[]) {
         network_socket_init(argv[3]);
     } else {
         localName = argv[1];
-        local_client_socket_init(localName);
-        local_socket_init(argv[3]);
+        local_socket_init(argv[3], argv[1]);
     }
 
     register_worker(argv[1]);
