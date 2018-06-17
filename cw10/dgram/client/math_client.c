@@ -15,8 +15,9 @@
 
 #define _BSD_SOURCE
 
-volatile int cont = 1;
 int clientSocket;
+char mode;
+char *localName = NULL;
 
 void cleanup_and_exit() {
     shutdown(clientSocket, SHUT_RDWR);
@@ -24,8 +25,19 @@ void cleanup_and_exit() {
     exit(EXIT_FAILURE);
 }
 
+void local_client_socket_init(char *socketPath) {
+    int clientSocket = socket(AF_UNIX, SOCK_DGRAM, 0);
+
+    struct sockaddr_un sockaddrUn;
+    sockaddrUn.sun_family = AF_UNIX;
+    strcpy(sockaddrUn.sun_path, socketPath);
+
+    bind(clientSocket, (struct sockaddr *) &sockaddrUn, sizeof(sockaddrUn));
+}
+
+
 void local_socket_init(char *socketPath) {
-    clientSocket = socket(AF_UNIX, SOCK_STREAM, 0);
+    clientSocket = socket(AF_UNIX, SOCK_DGRAM, 0);
 
     struct sockaddr_un serverAddr;
     serverAddr.sun_family = AF_UNIX;
@@ -92,17 +104,26 @@ void register_worker(char *name) {
 
     tlvMsg_t *retMsg = read_msg(clientSocket);
 
-    if(retMsg == NULL) {
+    if (retMsg == NULL) {
         return;
-    }else if (retMsg->type == STATUS_OK) {
-        printf("Registered successfully.\n");
-
+    } else if (retMsg->type == MESSAGE_TYPE_STATUS) {
+        uint8_t status;
+        memcpy(&status, &retMsg->value, sizeof(uint8_t));
         free(retMsg);
-    } else if (retMsg->type == ERROR_NAME_TAKEN) {
-        printf("Error: Name is already taken.\n");
 
-        free(retMsg);
-        cleanup_and_exit();
+        switch (status) {
+            case STATUS_OK:
+                printf("Registration successful.\n");
+                break;
+            case ERROR_NAME_TAKEN:
+                printf("Name already taken.\n");
+                cleanup_and_exit();
+                break;
+            default:
+                printf("Received unknown status.\n");
+                break;
+        }
+
     }
 }
 
@@ -189,7 +210,12 @@ void process_message() {
 }
 
 void sigint_handler(int sig) {
-    cont = 0;
+    deregister_worker();
+    if (localName != NULL) {
+        unlink(localName);
+    }
+
+    exit(EXIT_SUCCESS);
 }
 
 int main(int argc, char *argv[]) {
@@ -198,24 +224,19 @@ int main(int argc, char *argv[]) {
     }
     signal(SIGINT, sigint_handler);
 
-    char mode = argv[2][0];
+    mode = argv[2][0];
 
     if (mode == 'n' || mode == 'N') {
         network_socket_init(argv[3]);
     } else {
+        localName = argv[1];
+        local_client_socket_init(localName);
         local_socket_init(argv[3]);
     }
 
     register_worker(argv[1]);
 
-    while (cont) {
+    while (1) {
         process_message();
     }
-
-    deregister_worker();
-
-    shutdown(clientSocket, SHUT_RDWR);
-    close(clientSocket);
-
-    return 0;
 }

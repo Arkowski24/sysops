@@ -17,47 +17,54 @@
 #include "fifo/circular_fifo.h"
 #include "math_server.h"
 
-CircularFifo_t *fifo;
-pthread_mutex_t fifoMutex;
-pthread_cond_t fifoEmpty;
+CircularFifo_t *workerFifo;
+pthread_mutex_t workerFifoMutex;
+pthread_cond_t workerFifoEmpty;
+
+CircularFifo_t *othersFifo;
+pthread_mutex_t othersFifoMutex;
 
 int cont = 1;
 int publicLocalSocket;
 int publicNetworkSocket;
+pthread_mutex_t socketsMutex;
 
-void initialize_queue(unsigned int qSize) {
+void initialize_queues(unsigned int qSize, unsigned int oSize) {
     size_t memSize = offsetof(CircularFifo_t, queue) + sizeof(char *) * qSize;
-    fifo = malloc(memSize);
-    fifo_initialize(fifo, qSize);
+    workerFifo = malloc(memSize);
+    fifo_initialize(workerFifo, qSize);
+
+    size_t othSize = offsetof(CircularFifo_t, queue) + sizeof(tlvMsg_t *) * oSize;
+    othersFifo = malloc(othSize);
+    fifo_initialize(othersFifo, oSize);
 }
 
 void initialize_mutex_and_cond() {
-    pthread_mutex_init(&fifoMutex, NULL);
+    pthread_mutex_init(&workerFifoMutex, NULL);
+    pthread_cond_init(&workerFifoEmpty, NULL);
 
-    pthread_cond_init(&fifoEmpty, NULL);
+    pthread_mutex_init(&othersFifoMutex, NULL);
+
+    pthread_mutex_init(&socketsMutex, NULL);
 }
 
 void local_socket_init(char *socketPath) {
-    publicLocalSocket = socket(AF_UNIX, SOCK_STREAM, 0);
+    publicLocalSocket = socket(AF_UNIX, SOCK_DGRAM, 0);
 
     struct sockaddr_un sockaddrUn;
     sockaddrUn.sun_family = AF_UNIX;
     strcpy(sockaddrUn.sun_path, socketPath);
     bind(publicLocalSocket, (struct sockaddr *) &sockaddrUn, sizeof(sockaddrUn));
-
-    listen(publicLocalSocket, LOCAL_CLIENT_PENDING_MAX);
 }
 
 void network_socket_init(uint16_t port) {
-    publicNetworkSocket = socket(AF_INET, SOCK_STREAM, 0);
+    publicNetworkSocket = socket(AF_INET, SOCK_DGRAM, 0);
 
     struct sockaddr_in sockaddrIn;
     sockaddrIn.sin_family = AF_INET;
     sockaddrIn.sin_port = htons(port);
     sockaddrIn.sin_addr.s_addr = INADDR_ANY;
     bind(publicNetworkSocket, (struct sockaddr *) &sockaddrIn, sizeof(sockaddrIn));
-
-    listen(publicNetworkSocket, NETWORK_CLIENT_PENDING_MAX);
 }
 
 tlvMsg_t *create_tlv_msg(uint8_t type, void *val, size_t len, size_t *fSize) {
@@ -72,31 +79,104 @@ tlvMsg_t *create_tlv_msg(uint8_t type, void *val, size_t len, size_t *fSize) {
     return msg;
 }
 
-void send_status_message(int desc, uint8_t errorCode) {
+void send_to(tlvMsg_t *tlvMsg, size_t tlvMsgSize, struct sockaddr *address) {
+    if (address->sa_family == AF_UNIX) {
+        sendto(publicLocalSocket, tlvMsg, tlvMsgSize, MSG_NOSIGNAL, address, sizeof(struct sockaddr_un));
+    } else {
+        sendto(publicNetworkSocket, tlvMsg, tlvMsgSize, MSG_NOSIGNAL, address, sizeof(struct sockaddr_in));
+    }
+}
+
+void send_status_message(struct sockaddr *address, uint8_t errorCode) {
     size_t errSize;
     tlvMsg_t *errMsg = create_tlv_msg(MESSAGE_TYPE_STATUS, &errorCode, sizeof(uint8_t), &errSize);
-    send(desc, errMsg, errSize, MSG_NOSIGNAL);
+
+    send_to(errMsg, errSize, address);
     free(errMsg);
 }
 
-int ping_client(int desc) {
-    int ok = 1;
+tlvMsg_t *receive(int socket, struct sockaddr *address, socklen_t *addrLen) {
+    size_t pSize;
+    tlvMsg_t *pMsg = create_tlv_msg(0, NULL, 0, &pSize);
 
+    recvfrom(socket, pMsg, pSize, MSG_NOSIGNAL | MSG_PEEK, address, addrLen);
+    size_t rSize;
+    tlvMsg_t *rMsg = create_tlv_msg(0, NULL, pMsg->length, &rSize);
+    free(pMsg);
+    recvfrom(socket, rMsg, rSize, MSG_NOSIGNAL, address, addrLen);
+
+    return rMsg;
+}
+
+tlvMsg_t *receive_from_all(int socket) {
+    socklen_t addrLen;
+    struct sockaddr *address;
+    if (socket == publicLocalSocket) {
+        address = malloc(sizeof(struct sockaddr_un));
+    } else {
+        address = malloc(sizeof(struct sockaddr_in));
+    }
+
+    tlvMsg_t *rMsg = receive(socket, address, &addrLen);
+
+    OtherMsg_t *otherMsg = malloc(sizeof(OtherMsg_t));
+    otherMsg->msg = rMsg;
+    otherMsg->address = address;
+
+    pthread_mutex_lock(&othersFifoMutex);
+
+    if (fifo_push(othersFifo, otherMsg) == -1) { free(otherMsg); }
+    pthread_mutex_unlock(&othersFifoMutex);
+}
+
+tlvMsg_t *receive_from(struct sockaddr *sender) {
+    int socket;
+
+    while (1) {
+        socklen_t addrLen;
+        struct sockaddr *address;
+        if (sender->sa_family == AF_UNIX) {
+            socket = publicLocalSocket;
+            address = malloc(sizeof(struct sockaddr_un));
+        } else {
+            socket = publicNetworkSocket;
+            address = malloc(sizeof(struct sockaddr_in));
+        }
+
+        tlvMsg_t *rMsg = receive(socket, address, &addrLen);
+
+        if (compare_sockaddr(sender, address)) {
+            free(address);
+            return rMsg;
+        } else {
+            OtherMsg_t *otherMsg = malloc(sizeof(OtherMsg_t));
+            otherMsg->msg = rMsg;
+            otherMsg->address = address;
+
+            pthread_mutex_lock(&othersFifoMutex);
+
+            if (fifo_push(othersFifo, otherMsg) == -1) { free(otherMsg); }
+
+            pthread_mutex_unlock(&othersFifoMutex);
+        }
+    }
+}
+
+int ping_client(struct sockaddr *address) {
     size_t pingSize;
     tlvMsg_t *pingMsg = create_tlv_msg(MESSAGE_TYPE_PING, NULL, 0, &pingSize);
-    size_t pongSize;
-    tlvMsg_t *pongMsg = create_tlv_msg(MESSAGE_TYPE_PONG, NULL, 0, &pongSize);
+    tlvMsg_t *pongMsg;
 
-    ok = ok && (send(desc, pingMsg, pingSize, MSG_NOSIGNAL) > 0);
+    send_to(pingMsg, pingSize, address);
+    if (address->sa_family == AF_UNIX) {
+        sendto(publicLocalSocket, pingMsg, pingSize, MSG_NOSIGNAL, address, sizeof(struct sockaddr_un));
+        pongMsg = receive_from(address);
+    } else {
+        sendto(publicNetworkSocket, pingMsg, pingSize, MSG_NOSIGNAL, address, sizeof(struct sockaddr_in));
+        pongMsg = receive_from(address);
+    }
 
-    struct pollfd fdPoll;
-    fdPoll.fd = desc;
-    fdPoll.events = POLLIN;
-    poll(&fdPoll, 1, PING_POLL_TIMEOUT);
-
-    ok = ok && fdPoll.revents & POLLIN;
-    ok = ok && (recv(desc, pongMsg, pongSize, MSG_NOSIGNAL | MSG_WAITALL | MSG_DONTWAIT) > 0);
-    ok = ok && pongMsg->type == MESSAGE_TYPE_PONG;
+    int ok = (pongMsg->type == MESSAGE_TYPE_PONG);
 
     free(pingMsg);
     free(pongMsg);
@@ -104,43 +184,43 @@ int ping_client(int desc) {
     return ok;
 }
 
-void discard_worker(Worker_t *worker) {
-    shutdown(worker->sDesc, SHUT_RDWR);
-    close(worker->sDesc);
-    free(worker);
-}
-
 void *operation_routine(void *arg) {
     BinaryOperation_t *operation = (BinaryOperation_t *) arg;
 
     size_t oSize;
-    size_t rSize;
     tlvMsg_t *oMsg = create_tlv_msg(MESSAGE_TYPE_REQUEST, operation, sizeof(BinaryOperation_t), &oSize);
-    tlvMsg_t *rMsg = create_tlv_msg(MESSAGE_TYPE_RESPONSE, NULL, sizeof(double), &rSize);
+    tlvMsg_t *rMsg;
     double *result = malloc(sizeof(double));
 
-    pthread_mutex_lock(&fifoMutex);
+    pthread_mutex_lock(&workerFifoMutex);
+    pthread_mutex_lock(&socketsMutex);
     while (1) {
-        while (fifo_empty(fifo)) {
-            pthread_cond_wait(&fifoEmpty, &fifoMutex);
+        while (fifo_empty(workerFifo)) {
+            pthread_cond_wait(&workerFifoEmpty, &workerFifoMutex);
         }
-        Worker_t *worker = fifo_pop(fifo);
+        Worker_t *worker = fifo_pop(workerFifo);
+        struct sockaddr *address = worker->address;
 
-        int discard = 0;
-        discard = (send(worker->sDesc, oMsg, oSize, MSG_NOSIGNAL) <= 0);
-        discard = discard || (recv(worker->sDesc, rMsg, rSize, MSG_NOSIGNAL | MSG_WAITALL) <= 0);
-        discard = discard || rMsg->type != MESSAGE_TYPE_RESPONSE;
+        send_to(oMsg, oSize, address);
+        rMsg = receive_from(address);
+        int discard = rMsg->type != MESSAGE_TYPE_RESPONSE && rMsg->type != MESSAGE_TYPE_STATUS;
 
         if (discard) {
-            discard_worker(worker);
+            free(worker);
         } else {
-            memcpy(result, &rMsg->value, sizeof(double));
+            if (rMsg->type == MESSAGE_TYPE_RESPONSE) {
+                memcpy(result, &rMsg->value, sizeof(double));
+            } else {
+                free(result);
+                result = NULL;
+            }
 
-            fifo_push(fifo, worker);
+            fifo_push(workerFifo, worker);
             break;
         }
     }
-    pthread_mutex_unlock(&fifoMutex);
+    pthread_mutex_unlock(&socketsMutex);
+    pthread_mutex_unlock(&workerFifoMutex);
 
     free(arg);
     free(oMsg);
@@ -149,149 +229,95 @@ void *operation_routine(void *arg) {
     return result;
 }
 
-void close_communication(int desc) {
-    shutdown(desc, SHUT_RDWR);
-    close(desc);
-}
-
-Worker_t *create_worker(int sDesc, char *name) {
+Worker_t *create_worker(struct sockaddr *address, char *name) {
     Worker_t *worker = malloc(sizeof(Worker_t));
     size_t size = (strlen(name) + 1) * sizeof(char);
 
-    worker->sDesc = sDesc;
+    worker->address = address;
     worker->name = malloc(size);
     strcpy(worker->name, name);
 
     return worker;
 }
 
-void *register_worker_routine(void *args) {
+void *register_worker_routine(void *arg) {
     pthread_detach(pthread_self());
-    int sDesc = *(int *) args;
-    free(args);
+    Worker_t *worker = (Worker_t *) arg;
 
-    pthread_mutex_lock(&fifoMutex);
+    pthread_mutex_lock(&workerFifoMutex);
 
-    size_t pSize;
-    tlvMsg_t *pMsg = create_tlv_msg(MESSAGE_TYPE_REGISTER, NULL, 0, &pSize);
+    char *reqName = (char *) &worker->name;
+    int ok = 1;
+    ok = ok && fifo_unique_name(workerFifo, reqName);
+    ok = ok && (fifo_push(workerFifo, worker) == 0);
 
-    int nReg = fifo_full(fifo);
-    nReg = nReg || (recv(sDesc, pMsg, pSize, MSG_NOSIGNAL | MSG_PEEK | MSG_WAITALL) <= 0);
-    nReg = nReg || pMsg->type != MESSAGE_TYPE_REGISTER;
-
-    size_t rSize;
-    tlvMsg_t *rMsg = create_tlv_msg(MESSAGE_TYPE_REGISTER, NULL, pMsg->length, &rSize);
-    free(pMsg);
-
-    nReg = nReg || (recv(sDesc, rMsg, rSize, MSG_NOSIGNAL | MSG_WAITALL) <= 0);
-
-    if (nReg) {
-        close_communication(sDesc);
-        free(rMsg);
-
-        pthread_mutex_unlock(&fifoMutex);
-        pthread_exit(NULL);
-    }
-
-    char *reqName = (char *) &rMsg->value;
-    if (fifo_unique_name(fifo, reqName)) {
-        Worker_t *worker = create_worker(sDesc, reqName);
-        fifo_push(fifo, worker);
-        send_status_message(sDesc, STATUS_OK);
+    if (ok) {
+        send_status_message(worker->address, STATUS_OK);
 
         printf("Worker registered: %s\n", reqName);
-        pthread_cond_broadcast(&fifoEmpty);
+        pthread_cond_broadcast(&workerFifoEmpty);
     } else {
-        send_status_message(sDesc, ERROR_NAME_TAKEN);
-        close_communication(sDesc);
+        send_status_message(worker->address, ERROR_NAME_TAKEN);
+        free(arg);
     }
-    pthread_mutex_unlock(&fifoMutex);
-
-    free(rMsg);
+    pthread_mutex_unlock(&workerFifoMutex);
 
     return NULL;
 }
 
-void *deregister_worker_routine(void *args) {
+void *deregister_worker_routine(void *arg) {
 //    pthread_detach(pthread_self());
-    int sDesc = *(int *) args;
-    free(args);
+    struct sockaddr *address = (struct sockaddr *) arg;
 
-    pthread_mutex_lock(&fifoMutex);
-
-    size_t rSize;
-    tlvMsg_t *rMsg = create_tlv_msg(MESSAGE_TYPE_DEREGISTER, NULL, 0, &rSize);
-
-    int deReg;
-    deReg = (recv(sDesc, rMsg, rSize, MSG_NOSIGNAL | MSG_WAITALL) <= 0);
-    deReg = deReg || rMsg->type == MESSAGE_TYPE_DEREGISTER;
-
-    if (deReg) {
-        Worker_t *worker = fifo_find(fifo, sDesc);
-        if (worker != NULL) {
-            printf("Deregistered worker: %s\n", worker->name);
-            free(worker);
-        }
-
-        send_status_message(sDesc, STATUS_OK);
-        close_communication(sDesc);
+    pthread_mutex_lock(&workerFifoMutex);
+    Worker_t *worker = fifo_find(workerFifo, address);
+    if (worker != NULL) {
+        printf("Deregistered worker: %s\n", worker->name);
+        free(worker);
     }
-    pthread_mutex_unlock(&fifoMutex);
+    send_status_message(address, STATUS_OK);
 
-    free(rMsg);
+    pthread_mutex_unlock(&workerFifoMutex);
 
     return NULL;
 }
 
-void process_worker_messages() {
-    pthread_mutex_lock(&fifoMutex);
-    while (fifo_empty(fifo)) {
-        pthread_mutex_unlock(&fifoMutex);
+void process_other_messages() {
+    pthread_mutex_lock(&othersFifoMutex);
+    if (fifo_empty(othersFifo)) {
+        pthread_mutex_unlock(&othersFifoMutex);
         return;
     }
 
-    size_t toCheck = fifo_size(fifo);
-    struct pollfd workerPoll[toCheck];
-    pthread_t cleaners[toCheck];
-    int toClean = 0;
+    int itr = 0;
+    size_t toCheck = fifo_size(othersFifo);
+    pthread_t slaves[toCheck];
 
-    for (int i = 0; i < toCheck; ++i) {
-        Worker_t *worker = fifo_pop(fifo);
-        workerPoll[i].fd = worker->sDesc;
-        workerPoll[i].events = POLLIN;
-        fifo_push(fifo, worker);
-    }
+    while (!fifo_empty(othersFifo)) {
+        OtherMsg_t *otherMsg = fifo_pop(othersFifo);
 
-    poll(workerPoll, toCheck, POLL_TIMEOUT);
+        if (otherMsg->msg->type == MESSAGE_TYPE_REGISTER) {
+            char *name = (char *) otherMsg->msg->value;
+            Worker_t *worker = create_worker(otherMsg->address, name);
 
-    for (int j = 0; j < toCheck; ++j) {
-        if (workerPoll[j].revents & POLLIN || workerPoll[j].revents & POLLERR) {
-            int *desc = malloc(sizeof(int));
-            *desc = workerPoll[j].fd;
+            free(otherMsg->msg);
+            free(otherMsg);
 
-            pthread_create(cleaners + toClean, NULL, deregister_worker_routine, desc);
-            toClean++;
+            pthread_create(slaves + itr, NULL, register_worker_routine, worker);
+            itr++;
+        } else if (otherMsg->msg->type == MESSAGE_TYPE_REGISTER) {
+            struct sockaddr *address = otherMsg->address;
+            free(otherMsg->msg);
+            free(otherMsg);
+
+            pthread_create(slaves + itr, NULL, deregister_worker_routine, address);
+            itr++;
         }
     }
-    pthread_mutex_unlock(&fifoMutex);
+    pthread_mutex_unlock(&othersFifoMutex);
 
-    for (int k = 0; k < toClean; ++k) {
-        pthread_join(cleaners[k], NULL);
-    }
-}
-
-void process_public_messages(struct pollfd cPoll[], size_t cPollCount) {
-    poll(cPoll, cPollCount, POLL_TIMEOUT);
-
-    for (int i = 0; i < cPollCount; ++i) {
-        if (cPoll[i].revents & POLLIN) {
-            int *desc = malloc(sizeof(int));
-            *desc = accept(publicLocalSocket, NULL, NULL);
-
-            pthread_t threadID;
-            pthread_create(&threadID, NULL, register_worker_routine, desc);
-//            pthread_join(threadID, NULL);
-        }
+    for (int i = 0; i < itr; ++i) {
+        pthread_join(slaves[i], NULL);
     }
 }
 
@@ -305,10 +331,22 @@ void *process_messages_routine(void *arg) {
     while (1) {
         pthread_testcancel();
 
-        process_worker_messages();
-        process_public_messages(publicPoll, 2);
+        pthread_mutex_lock(&socketsMutex);
+        for (int i = 0; i < MAX_MESSAGES_IN_BATCH; ++i) {
+            poll(publicPoll, 2, POLL_TIMEOUT);
+
+            if (publicPoll[0].revents & POLLIN) {
+                receive_from_all(publicLocalSocket);
+            }
+            if (publicPoll[1].revents & POLLIN) {
+                receive_from_all(publicNetworkSocket);
+            }
+        }
+        process_other_messages();
+        pthread_mutex_unlock(&socketsMutex);
 
         if (arg != NULL && *(int *) arg == 0) { break; }
+        usleep(PROCESS_MSG_SLEEP);
     }
 
     return NULL;
@@ -320,18 +358,21 @@ void *periodic_ping_routine(void *arg) {
     while (1) {
         pthread_testcancel();
 
-        pthread_mutex_lock(&fifoMutex);
-        size_t toCheck = fifo_size(fifo);
+        pthread_mutex_lock(&workerFifoMutex);
+        pthread_mutex_lock(&socketsMutex);
+        size_t toCheck = fifo_size(workerFifo);
         for (int i = 0; i < toCheck; ++i) {
-            Worker_t *worker = fifo_pop(fifo);
+            Worker_t *worker = fifo_pop(workerFifo);
 
-            if (ping_client(worker->sDesc)) {
-                fifo_push(fifo, worker);
+            if (ping_client(worker->address)) {
+                fifo_push(workerFifo, worker);
             } else {
-                discard_worker(worker);
+                free(worker->address);
+                free(worker);
             }
         }
-        pthread_mutex_unlock(&fifoMutex);
+        pthread_mutex_unlock(&socketsMutex);
+        pthread_mutex_unlock(&workerFifoMutex);
 
         if (arg != NULL && *(int *) arg == 0) { break; }
         sleep(PING_THREAD_SLEEP);
@@ -340,19 +381,10 @@ void *periodic_ping_routine(void *arg) {
     return NULL;
 }
 
-void shutdown_all_workers(pthread_t snifferID) {
-    pthread_cancel(snifferID);
-
-    pthread_mutex_lock(&fifoMutex);
-    while (!fifo_empty(fifo)) {
-        Worker_t *worker = fifo_pop(fifo);
-        discard_worker(worker);
-    }
-    pthread_mutex_unlock(&fifoMutex);
-}
-
 void sigint_handler(int sig) {
     cont = 0;
+    alarm(10);
+    printf("Shutting down.\n");
 }
 
 int main(int argc, char *argv[]) {
@@ -361,7 +393,7 @@ int main(int argc, char *argv[]) {
     }
 
     signal(SIGINT, sigint_handler);
-    initialize_queue(ALL_CLIENTS_MAX);
+    initialize_queues(ALL_CLIENTS_MAX, MAX_OTHER_MESSAGES);
     initialize_mutex_and_cond();
 
     uint16_t port = (uint16_t) atoi(argv[2]);
@@ -375,9 +407,11 @@ int main(int argc, char *argv[]) {
 
     while (cont) {
         BinaryOperation_t *operation = malloc(sizeof(BinaryOperation_t));
-        scanf("%lf %c %lf", &operation->op1, &operation->operator, &operation->op2);
+        if (scanf("%lf %c %lf", &operation->op1, &operation->operator, &operation->op2) < 3) {
+            break;
+        }
 
-        if (operation->operator == 'e') {
+        if (operation->operator == '0') {
             break;
         }
 
@@ -386,13 +420,13 @@ int main(int argc, char *argv[]) {
 
         void *res;
         pthread_join(supervisorID, &res);
-        printf("%lf\n", *(double *) res);
-        free(res);
+        if (res == NULL) {
+            printf("Unknown operation.\n");
+        } else {
+            printf("%lf\n", *(double *) res);
+            free(res);
+        }
     }
-
-    shutdown_all_workers(snifferID);
-    shutdown(publicLocalSocket, SHUT_RDWR);
-    shutdown(publicNetworkSocket, SHUT_RDWR);
 
     unlink(argv[1]);
 

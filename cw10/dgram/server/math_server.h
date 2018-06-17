@@ -27,6 +27,10 @@
 #define NETWORK_CLIENT_PENDING_MAX 32
 #define ALL_CLIENTS_MAX 64
 
+#define MAX_OTHER_MESSAGES 256
+#define MAX_MESSAGES_IN_BATCH 10
+#define PROCESS_MSG_SLEEP 1000
+
 struct {
     char operator;
     double op1;
