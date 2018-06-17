@@ -21,6 +21,7 @@ CircularFifo_t *fifo;
 pthread_mutex_t fifoMutex;
 pthread_cond_t fifoEmpty;
 
+char *localSocketName;
 int cont = 1;
 int publicLocalSocket;
 int publicNetworkSocket;
@@ -106,6 +107,8 @@ int ping_client(int desc) {
 
 void discard_worker(Worker_t *worker) {
     shutdown(worker->sDesc, SHUT_RDWR);
+
+    printf("Discarded worker: %s\n", worker->name);
     close(worker->sDesc);
     free(worker);
 }
@@ -125,6 +128,7 @@ void *operation_routine(void *arg) {
             pthread_cond_wait(&fifoEmpty, &fifoMutex);
         }
         Worker_t *worker = fifo_pop(fifo);
+        printf("Sending task to worker: %s\n", worker->name);
 
         int discard = 0;
         discard = (send(worker->sDesc, oMsg, oSize, MSG_NOSIGNAL) <= 0);
@@ -132,8 +136,10 @@ void *operation_routine(void *arg) {
         discard = discard || (rMsg->type != MESSAGE_TYPE_RESPONSE && rMsg->type != MESSAGE_TYPE_STATUS);
 
         if (discard) {
+            printf("Not received request response from worker: %s\n. Discarding.", worker->name);
             discard_worker(worker);
         } else {
+            printf("Received request response from worker: %s\n", worker->name);
             if (rMsg->type == MESSAGE_TYPE_RESPONSE) {
                 memcpy(result, &rMsg->value, sizeof(double));
             } else {
@@ -250,7 +256,7 @@ void *deregister_worker_routine(void *args) {
 
 void process_worker_messages() {
     pthread_mutex_lock(&fifoMutex);
-    while (fifo_empty(fifo)) {
+    if (fifo_empty(fifo)) {
         pthread_mutex_unlock(&fifoMutex);
         return;
     }
@@ -345,9 +351,7 @@ void *periodic_ping_routine(void *arg) {
     return NULL;
 }
 
-void shutdown_all_workers(pthread_t snifferID) {
-    pthread_cancel(snifferID);
-
+void shutdown_all_workers() {
     pthread_mutex_lock(&fifoMutex);
     while (!fifo_empty(fifo)) {
         Worker_t *worker = fifo_pop(fifo);
@@ -358,8 +362,16 @@ void shutdown_all_workers(pthread_t snifferID) {
 
 void sigint_handler(int sig) {
     cont = 0;
-    alarm(10);
+
+    alarm(100);
     printf("Shutting down.\n");
+
+    shutdown_all_workers();
+    shutdown(publicLocalSocket, SHUT_RDWR);
+    shutdown(publicNetworkSocket, SHUT_RDWR);
+
+    unlink(localSocketName);
+    exit(EXIT_SUCCESS);
 }
 
 int main(int argc, char *argv[]) {
@@ -372,12 +384,13 @@ int main(int argc, char *argv[]) {
     initialize_mutex_and_cond();
 
     uint16_t port = (uint16_t) atoi(argv[2]);
+    localSocketName = argv[1];
     local_socket_init(argv[1]);
     network_socket_init(port);
 
     pthread_t snifferID;
     pthread_t pingerID;
-    pthread_create(&snifferID, NULL, process_messages_routine, NULL);
+    pthread_create(&snifferID, NULL, process_messages_routine, &cont);
     pthread_create(&pingerID, NULL, periodic_ping_routine, NULL);
 
     while (cont) {
@@ -403,11 +416,11 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    shutdown_all_workers(snifferID);
+    shutdown_all_workers();
     shutdown(publicLocalSocket, SHUT_RDWR);
     shutdown(publicNetworkSocket, SHUT_RDWR);
 
-    unlink(argv[1]);
+    unlink(localSocketName);
 
     return 0;
 }
